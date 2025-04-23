@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getProcessMiningAnalysis } from '@/services/ProcessMiningService';
-import { Loader2, Activity, Layers, LayersThree } from 'lucide-react';
+import { Loader2, Activity, Layers, Network } from 'lucide-react';
 
 type AnalysisType = 'process' | 'knowledge' | 'causal';
 
@@ -32,12 +31,22 @@ const ProcessMining = () => {
   const getPlaceholder = (type: AnalysisType) => {
     switch (type) {
       case 'process':
-        return "Enter your process mining prompt (e.g., 'What are the common training pathways?')";
+        return "Example: 'Show me the most common learning paths that result in successful AI certifications'";
       case 'knowledge':
-        return "Enter your knowledge graph prompt (e.g., 'What skills are connected to which roles?')";
+        return "Example: 'What skills and competencies are most strongly connected to successful cloud architect roles?'";
       case 'causal':
-        return "Enter your causal graph prompt (e.g., 'What factors influence training success?')";
+        return "Example: 'What factors have the strongest influence on completion rates for cybersecurity training programs?'";
     }
+  };
+
+  const handleSampleQuery = () => {
+    const sampleQueries = {
+      process: "Show me the most common learning paths that result in successful AI certifications",
+      knowledge: "What skills and competencies are most strongly connected to successful cloud architect roles?",
+      causal: "What factors have the strongest influence on completion rates for cybersecurity training programs?"
+    };
+    
+    handlePromptChange(activeTab, sampleQueries[activeTab]);
   };
 
   const handleAnalysis = async () => {
@@ -88,32 +97,41 @@ const ProcessMining = () => {
                 Knowledge Graph
               </TabsTrigger>
               <TabsTrigger value="causal" className="flex items-center gap-2">
-                <LayersThree className="w-4 h-4" />
+                <Network className="w-4 h-4" />
                 Causal Graph
               </TabsTrigger>
             </TabsList>
 
             {(['process', 'knowledge', 'causal'] as const).map((type) => (
               <TabsContent key={type} value={type}>
-                <div className="flex gap-4">
-                  <Input
-                    placeholder={getPlaceholder(type)}
-                    value={prompts[type]}
-                    onChange={(e) => handlePromptChange(type, e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={handleAnalysis}
-                    disabled={loading}
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <Input
+                      placeholder={getPlaceholder(type)}
+                      value={prompts[type]}
+                      onChange={(e) => handlePromptChange(type, e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={handleAnalysis}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        'Analyze'
+                      )}
+                    </Button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleSampleQuery}
+                    className="w-full"
                   >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      'Analyze'
-                    )}
+                    Try Sample Query
                   </Button>
                 </div>
               </TabsContent>
