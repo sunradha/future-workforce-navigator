@@ -1,4 +1,3 @@
-
 export interface Occupation {
   id: number;
   title: string;
@@ -62,4 +61,10 @@ export type BudgetScenario = {
   impactedEmployees: number;
 };
 
-export type DashboardTab = 'risk' | 'effectiveness' | 'prediction' | 'budget' | 'prioritization';
+export type DashboardTab = 'risk' | 'effectiveness' | 'prediction' | 'budget' | 'prioritization' | 'process-mining';
+
+export interface ProcessMiningResponse {
+  process_mining_result: string;
+  knowledge_graph: string;
+  causal_graph: string;
+}

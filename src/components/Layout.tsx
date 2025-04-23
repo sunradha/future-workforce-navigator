@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   BarChart, 
@@ -9,6 +10,7 @@ import {
   Menu,
   Search,
   DollarSign,
+  Network
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DashboardTab } from '@/types';
@@ -28,6 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
     { name: 'Predictive Modeling', href: '#', icon: TrendingUp, tab: 'prediction' as DashboardTab },
     { name: 'Budget Analysis', href: '#', icon: DollarSign, tab: 'budget' as DashboardTab },
     { name: 'Role Prioritization', href: '#', icon: UserCog, tab: 'prioritization' as DashboardTab },
+    { name: 'Process Mining', href: '#', icon: Network, tab: 'process-mining' as DashboardTab },
   ];
 
   return (
@@ -111,3 +114,4 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
 };
 
 export default Layout;
+

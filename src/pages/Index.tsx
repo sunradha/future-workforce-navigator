@@ -6,6 +6,7 @@ import TrainingAssessment from './dashboards/TrainingAssessment';
 import PredictiveModeling from './dashboards/PredictiveModeling';
 import BudgetAnalysis from './dashboards/BudgetAnalysis';
 import RolePrioritization from './dashboards/RolePrioritization';
+import ProcessMining from './dashboards/ProcessMining';
 import { DashboardTab } from '@/types';
 
 const Index = () => {
@@ -23,6 +24,8 @@ const Index = () => {
         return <BudgetAnalysis />;
       case 'prioritization':
         return <RolePrioritization />;
+      case 'process-mining':
+        return <ProcessMining />;
       default:
         return <RiskMapping />;
     }
@@ -36,3 +39,4 @@ const Index = () => {
 };
 
 export default Index;
+
