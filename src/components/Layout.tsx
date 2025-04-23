@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { 
   BarChart, 
   DatabaseBackup, 
-  GaugeSemicircle, 
+  Gauge, 
   LayoutDashboard, 
   TrendingUp,
   UserCog,
@@ -24,7 +23,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const navigation = [
-    { name: 'Risk Mapping', href: '#', icon: GaugeSemicircle, tab: 'risk' as DashboardTab },
+    { name: 'Risk Mapping', href: '#', icon: Gauge, tab: 'risk' as DashboardTab },
     { name: 'Training Assessment', href: '#', icon: BarChart, tab: 'effectiveness' as DashboardTab },
     { name: 'Predictive Modeling', href: '#', icon: TrendingUp, tab: 'prediction' as DashboardTab },
     { name: 'Budget Analysis', href: '#', icon: DollarSign, tab: 'budget' as DashboardTab },
