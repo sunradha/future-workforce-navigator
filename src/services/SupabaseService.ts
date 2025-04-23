@@ -1,4 +1,3 @@
-
 import { 
   Occupation, 
   ReskillEvent, 
@@ -8,29 +7,44 @@ import {
   SuccessRateData,
   BudgetScenario 
 } from '../types';
+import { supabase } from '@/integrations/supabase/client';
 
-import {
-  getHighRiskOccupations,
-  getRiskDistribution,
-  getTrainingEffectiveness,
-  getCompletionRateByEducation,
-  getCompletionRateByExperience,
-  getCertificationRateByOccupation,
-  getBudgetScenario,
-  getPriorityReskilling
-} from '../data/mockData';
-
-// This service will eventually connect to Supabase 
-// For now, it uses the mock data
 class SupabaseService {
   // Risk analysis data
   async getHighRiskOccupations(): Promise<Occupation[]> {
-    // This would fetch from Supabase table
-    return getHighRiskOccupations();
+    const { data, error } = await supabase
+      .from('job_risk')
+      .select('*')
+      .order('automation_probability', { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+
+    return data.map(job => ({
+      id: job.soc_code,
+      title: job.job_title,
+      automationRisk: job.automation_probability,
+      departmentCount: Math.floor(Math.random() * 100) + 20, // Placeholder since we don't have this in job_risk
+      skillCategory: 'Technical', // Placeholder since we don't have this in job_risk
+    }));
   }
 
   async getRiskDistribution(): Promise<RiskDistribution> {
-    return getRiskDistribution();
+    const { data, error } = await supabase
+      .from('job_risk')
+      .select('automation_probability');
+
+    if (error) throw error;
+
+    const highRisk = data.filter(job => job.automation_probability >= 0.7).length;
+    const mediumRisk = data.filter(job => job.automation_probability >= 0.3 && job.automation_probability < 0.7).length;
+    const lowRisk = data.filter(job => job.automation_probability < 0.3).length;
+
+    return {
+      highRisk,
+      mediumRisk,
+      lowRisk
+    };
   }
 
   // Training effectiveness data
