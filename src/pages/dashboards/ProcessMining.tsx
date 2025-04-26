@@ -1,22 +1,30 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getProcessMiningAnalysis } from '@/services/ProcessMiningService';
-import { Loader2, Activity, Layers, Network } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-type AnalysisType = 'process' | 'knowledge' | 'causal';
+const questions = [
+  "What are the most common training paths?",
+  "Where are the biggest bottlenecks in the training process?",
+  "Which training sequences lead to the highest certification rates?",
+  "What are the average time intervals between training activities?",
+  "What process improvements would you recommend based on this analysis?",
+  "What patterns exist between job automation risk and training program selection?",
+  "Which employee characteristics correlate with successful certification?",
+  "What are the implicit relationships between job roles and successful training outcomes?",
+  "How does the knowledge graph reveal hidden connections in the workforce reskilling ecosystem?",
+  "What personalized training recommendations would you make based on this knowledge graph analysis?",
+  "Does high automation risk cause lower training completion rates?",
+  "What is the causal effect of training program type on certification outcomes?",
+  "What would happen if employees in high-risk jobs were assigned different training programs?",
+  "How would a 30% reduction in available training affect overall certification rates?",
+  "What interventions would have the highest causal impact on successful reskilling?"
+];
 
 const ProcessMining = () => {
-  const [activeTab, setActiveTab] = useState<AnalysisType>('process');
-  const [prompts, setPrompts] = useState({
-    process: '',
-    knowledge: '',
-    causal: ''
-  });
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<{
     processMining: string;
@@ -25,45 +33,10 @@ const ProcessMining = () => {
   } | null>(null);
   const { toast } = useToast();
 
-  const handlePromptChange = (type: AnalysisType, value: string) => {
-    setPrompts(prev => ({ ...prev, [type]: value }));
-  };
-
-  const getPlaceholder = (type: AnalysisType) => {
-    switch (type) {
-      case 'process':
-        return "Example: 'Show me the most common learning paths that result in successful AI certifications'";
-      case 'knowledge':
-        return "Example: 'What skills and competencies are most strongly connected to successful cloud architect roles?'";
-      case 'causal':
-        return "Example: 'What factors have the strongest influence on completion rates for cybersecurity training programs?'";
-    }
-  };
-
-  const handleSampleQuery = () => {
-    const sampleQueries = {
-      process: "Show me the most common learning paths that result in successful AI certifications",
-      knowledge: "What skills and competencies are most strongly connected to successful cloud architect roles?",
-      causal: "What factors have the strongest influence on completion rates for cybersecurity training programs?"
-    };
-    
-    handlePromptChange(activeTab, sampleQueries[activeTab]);
-  };
-
-  const handleAnalysis = async () => {
-    const currentPrompt = prompts[activeTab];
-    if (!currentPrompt.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a prompt for analysis",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleAnalysis = async (question: string) => {
     setLoading(true);
     try {
-      const data = await getProcessMiningAnalysis(currentPrompt);
+      const data = await getProcessMiningAnalysis(question);
       setResults({
         processMining: data.process_mining_result,
         knowledgeGraph: data.knowledge_graph,
@@ -84,98 +57,42 @@ const ProcessMining = () => {
     <div className="grid gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>AI Analysis</CardTitle> {/* Updated title here */}
+          <CardTitle>AI Analysis</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AnalysisType)}>
-            <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="process" className="flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                Process Mining
-              </TabsTrigger>
-              <TabsTrigger value="knowledge" className="flex items-center gap-2">
-                <Layers className="w-4 h-4" />
-                Knowledge Graph
-              </TabsTrigger>
-              <TabsTrigger value="causal" className="flex items-center gap-2">
-                <Network className="w-4 h-4" />
-                Causal Graph
-              </TabsTrigger>
-            </TabsList>
-
-            {(['process', 'knowledge', 'causal'] as const).map((type) => (
-              <TabsContent key={type} value={type}>
-                <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <Input
-                      placeholder={getPlaceholder(type)}
-                      value={prompts[type]}
-                      onChange={(e) => handlePromptChange(type, e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      onClick={handleAnalysis}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Analyzing...
-                        </>
-                      ) : (
-                        'Analyze'
-                      )}
-                    </Button>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={handleSampleQuery}
-                    className="w-full"
-                  >
-                    Try Sample Query
-                  </Button>
-                </div>
-              </TabsContent>
+          <div className="grid grid-cols-3 gap-4">
+            {questions.map((question, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="h-auto py-4 px-6 text-left whitespace-normal"
+                onClick={() => handleAnalysis(question)}
+                disabled={loading}
+              >
+                {question}
+              </Button>
             ))}
-          </Tabs>
+          </div>
         </CardContent>
       </Card>
 
       {results && (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Process Mining Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg">
-                {results.processMining}
-              </pre>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Analysis Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg">
+              {JSON.stringify(results, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Knowledge Graph</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg">
-                {results.knowledgeGraph}
-              </pre>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Causal Graph</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg">
-                {results.causalGraph}
-              </pre>
-            </CardContent>
-          </Card>
-        </>
+      {loading && (
+        <div className="flex items-center justify-center p-4">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
       )}
     </div>
   );
