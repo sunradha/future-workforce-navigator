@@ -13,12 +13,12 @@ export interface ProcessMiningResponse {
 
 export const getProcessMiningAnalysis = async (prompt: string): Promise<ProcessMiningResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/process_mining`, {
+    const response = await fetch(`${API_BASE_URL}/api/ask-question`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ question: prompt }),
     });
     
     if (!response.ok) {
