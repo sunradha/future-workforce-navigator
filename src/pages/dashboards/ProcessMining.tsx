@@ -114,47 +114,63 @@ const ProcessMining = () => {
       </Card>
 
       {results && (
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <CardTitle className="text-sm font-medium">Reasoning Type</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <p className="text-sm">{results.reasoning_type}</p>
-            </CardContent>
-          </Card>
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <CardTitle className="text-sm font-medium">Reasoning Type</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <p className="text-sm">{results.reasoning_type}</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <CardTitle className="text-sm font-medium">Reasoning Justification</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <p className="text-sm">{results.reasoning_justification}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <CardTitle className="text-sm font-medium">Intent</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <p className="text-sm">{results.reasoning_intent}</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <CardTitle className="text-sm font-medium">Intent Justification</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <p className="text-sm">{results.reasoning_intent_justification}</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
           <Card>
             <CardHeader className="flex flex-row items-center gap-2">
               <FileText className="h-4 w-4" />
-              <CardTitle className="text-sm font-medium">Reasoning Justification</CardTitle>
+              <CardTitle>Analysis Result</CardTitle>
             </CardHeader>
             <CardContent className="pt-2">
-              <p className="text-sm">{results.reasoning_justification}</p>
+              <p>{results.process_mining_result}</p>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <CardTitle className="text-sm font-medium">Reasoning Intent</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <p className="text-sm">{results.reasoning_intent}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <CardTitle className="text-sm font-medium">Reasoning Intent Justification</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <p className="text-sm">{results.reasoning_intent_justification}</p>
-            </CardContent>
-          </Card>
-        </div>
+        </>
       )}
 
       {loading && (
