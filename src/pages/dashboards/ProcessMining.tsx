@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getProcessMiningAnalysis } from '@/services/ProcessMiningService';
 import { Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 const questions = [
   "What are the most common training paths?",
@@ -31,6 +33,7 @@ const ProcessMining = () => {
     knowledgeGraph: string;
     causalGraph: string;
   } | null>(null);
+  const [customQuestion, setCustomQuestion] = useState('');
   const { toast } = useToast();
 
   const handleAnalysis = async (question: string) => {
@@ -60,19 +63,46 @@ const ProcessMining = () => {
           <CardTitle>AI Analysis</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4">
-            {questions.map((question, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                className="h-auto py-4 px-6 text-left whitespace-normal"
-                onClick={() => handleAnalysis(question)}
-                disabled={loading}
-              >
-                {question}
-              </Button>
-            ))}
-          </div>
+          <Tabs defaultValue="predefined" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="predefined">Pre-defined Questions</TabsTrigger>
+              <TabsTrigger value="custom">Ask Custom Question</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="predefined">
+              <div className="grid grid-cols-3 gap-4">
+                {questions.map((question, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    className="h-auto py-4 px-6 text-left whitespace-normal"
+                    onClick={() => handleAnalysis(question)}
+                    disabled={loading}
+                  >
+                    {question}
+                  </Button>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="custom">
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Type your question here..."
+                  value={customQuestion}
+                  onChange={(e) => setCustomQuestion(e.target.value)}
+                  className="min-h-[100px]"
+                />
+                <Button 
+                  onClick={() => handleAnalysis(customQuestion)}
+                  disabled={loading || !customQuestion.trim()}
+                  className="w-full"
+                >
+                  Analyze
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
