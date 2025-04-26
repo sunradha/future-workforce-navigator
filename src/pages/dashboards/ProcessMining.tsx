@@ -3,10 +3,17 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getProcessMiningAnalysis } from '@/services/ProcessMiningService';
-import { Loader2 } from 'lucide-react';
+import { getProcessMiningAnalysis, ProcessMiningResponse } from '@/services/ProcessMiningService';
+import { Loader2, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const questions = [
   "What are the most common training paths?",
@@ -28,23 +35,16 @@ const questions = [
 
 const ProcessMining = () => {
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<{
-    processMining: string;
-    knowledgeGraph: string;
-    causalGraph: string;
-  } | null>(null);
+  const [results, setResults] = useState<ProcessMiningResponse | null>(null);
   const [customQuestion, setCustomQuestion] = useState('');
+  const [selectedQuestion, setSelectedQuestion] = useState('');
   const { toast } = useToast();
 
   const handleAnalysis = async (question: string) => {
     setLoading(true);
     try {
       const data = await getProcessMiningAnalysis(question);
-      setResults({
-        processMining: data.process_mining_result,
-        knowledgeGraph: data.knowledge_graph,
-        causalGraph: data.causal_graph,
-      });
+      setResults(data);
     } catch (error) {
       toast({
         title: "Error",
@@ -69,20 +69,27 @@ const ProcessMining = () => {
               <TabsTrigger value="custom">Ask Custom Question</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="predefined">
-              <div className="grid grid-cols-3 gap-4">
-                {questions.map((question, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="h-auto py-4 px-6 text-left whitespace-normal"
-                    onClick={() => handleAnalysis(question)}
-                    disabled={loading}
-                  >
-                    {question}
-                  </Button>
-                ))}
-              </div>
+            <TabsContent value="predefined" className="space-y-4">
+              <Select value={selectedQuestion} onValueChange={(value) => setSelectedQuestion(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a question" />
+                </SelectTrigger>
+                <SelectContent>
+                  {questions.map((question, index) => (
+                    <SelectItem key={index} value={question}>
+                      {question}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Button 
+                onClick={() => handleAnalysis(selectedQuestion)}
+                disabled={loading || !selectedQuestion}
+                className="w-full"
+              >
+                Analyze
+              </Button>
             </TabsContent>
             
             <TabsContent value="custom">
@@ -107,16 +114,47 @@ const ProcessMining = () => {
       </Card>
 
       {results && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Analysis Results</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="whitespace-pre-wrap bg-muted p-4 rounded-lg">
-              {JSON.stringify(results, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium">Reasoning Type</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <p className="text-sm">{results.reasoning_type}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium">Reasoning Justification</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <p className="text-sm">{results.reasoning_justification}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium">Reasoning Intent</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <p className="text-sm">{results.reasoning_intent}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium">Reasoning Intent Justification</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <p className="text-sm">{results.reasoning_intent_justification}</p>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {loading && (
