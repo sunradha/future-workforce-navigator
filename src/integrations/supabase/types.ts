@@ -56,15 +56,15 @@ export type Database = {
       }
       dim_occupation_rows: {
         Row: {
-          occupation_title: string | null
+          job_title: string | null
           soc_code: string
         }
         Insert: {
-          occupation_title?: string | null
+          job_title?: string | null
           soc_code: string
         }
         Update: {
-          occupation_title?: string | null
+          job_title?: string | null
           soc_code?: string
         }
         Relationships: []
@@ -107,15 +107,27 @@ export type Database = {
       }
       employee_profile: {
         Row: {
+          age_band: string | null
           employee_id: number
+          local_authority_code: string | null
+          qualification: string | null
+          sex: string | null
           soc_code: number | null
         }
         Insert: {
+          age_band?: string | null
           employee_id: number
+          local_authority_code?: string | null
+          qualification?: string | null
+          sex?: string | null
           soc_code?: number | null
         }
         Update: {
+          age_band?: string | null
           employee_id?: number
+          local_authority_code?: string | null
+          qualification?: string | null
+          sex?: string | null
           soc_code?: number | null
         }
         Relationships: [

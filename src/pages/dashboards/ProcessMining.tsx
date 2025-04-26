@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -83,7 +84,7 @@ const ProcessMining = () => {
     <div className="grid gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>Advanced Graph Analysis</CardTitle>
+          <CardTitle>AI Analysis</CardTitle> {/* Updated title here */}
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AnalysisType)}>
