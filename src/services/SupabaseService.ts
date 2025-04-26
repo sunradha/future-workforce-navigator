@@ -1,4 +1,3 @@
-
 import { 
   Occupation, 
   ReskillEvent, 
@@ -12,23 +11,79 @@ import { supabase } from '@/integrations/supabase/client';
 
 class SupabaseService {
   // Risk analysis data
-  async getHighRiskOccupations(): Promise<Occupation[]> {
-    const { data, error } = await supabase
-      .from('job_risk')
-      .select('*')
-      .order('automation_probability', { ascending: false })
-      .limit(10);
+  // async getHighRiskOccupations(): Promise<Occupation[]> {
+  //   const { data, error } = await supabase
+  //     .from('job_risk')
+  //     .select('*')
+  //     .order('automation_probability', { ascending: false })
+  //     .limit(10);
 
-    if (error) throw error;
+  //   if (error) throw error;
 
-    return data.map(job => ({
-      id: job.soc_code,
-      title: job.job_title,
-      automationRisk: job.automation_probability,
-      departmentCount: Math.floor(Math.random() * 100) + 20, // Placeholder since we don't have this in job_risk
-      skillCategory: 'Technical', // Placeholder since we don't have this in job_risk
-    }));
+  //   return data.map(job => ({
+  //     id: job.soc_code,
+  //     title: job.job_title,
+  //     automationRisk: job.automation_probability,
+  //     departmentCount: Math.floor(Math.random() * 100) + 20, // Placeholder since we don't have this in job_risk
+  //     skillCategory: 'Technical', // Placeholder since we don't have this in job_risk
+  //   }));
+  // }
+
+async getHighRiskOccupations(): Promise<{ totalEmployeesInHighRisk: number; roles: Occupation[] }> {
+  const { data: highRiskJobs, error: jobError } = await supabase
+    .from('job_risk')
+    .select('soc_code, job_title, automation_probability')
+    .gte('automation_probability', 0.6);
+
+  if (jobError) throw jobError;
+
+  const highRiskSocCodes = highRiskJobs.map(job => job.soc_code);
+
+  if (highRiskSocCodes.length === 0) {
+    return { totalEmployeesInHighRisk: 0, roles: [] };
   }
+
+  // ✅ Total employee count (NO LIMITATION)
+  const { data: totalCountData, error: totalCountError } = await supabase
+    .from('employee_profile')
+    .select('count', { count: 'exact' })
+    .in('soc_code', highRiskSocCodes);
+
+  if (totalCountError) throw totalCountError;
+
+  const totalEmployeesInHighRisk = totalCountData?.[0]?.count || 0;
+
+  // ✅ Per-role counts (needs full fetch — so keep this part simple!)
+  const { data: employees, error: employeeError } = await supabase
+    .from('employee_profile')
+    .select('employee_id, soc_code')
+    .in('soc_code', highRiskSocCodes)
+    .range(0, 999999);                                    // 👈 This still risks the 1000 limit
+
+  if (employeeError) throw employeeError;
+
+  const employeeCountMap = (employees || []).reduce((acc, emp) => {
+    acc[emp.soc_code] = (acc[emp.soc_code] || 0) + 1;
+    return acc;
+  }, {} as Record<number, number>);
+
+  const roles = highRiskJobs.map(job => ({
+    id: job.soc_code,
+    title: job.job_title,
+    automationRisk: job.automation_probability,
+    departmentCount: employeeCountMap[job.soc_code] || 0,
+    skillCategory: 'Technical',
+  }))
+  .sort((a, b) => b.automationRisk - a.automationRisk) // Order by descending automation risk
+  .slice(0, 10); // Limit to top 10 roles
+
+  return {
+    totalEmployeesInHighRisk,
+    roles,
+  };
+}
+
+
 
   async getRiskDistribution(): Promise<RiskDistribution> {
     const { data, error } = await supabase
@@ -37,7 +92,7 @@ class SupabaseService {
 
     if (error) throw error;
 
-    const highRisk = data.filter(job => job.automation_probability >= 0.7).length;
+    const highRisk = data.filter(job => job.automation_probability >= 0.6).length;
     const mediumRisk = data.filter(job => job.automation_probability >= 0.3 && job.automation_probability < 0.7).length;
     const lowRisk = data.filter(job => job.automation_probability < 0.3).length;
 

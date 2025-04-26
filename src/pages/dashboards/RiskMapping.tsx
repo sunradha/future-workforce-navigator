@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabaseService } from '@/services/SupabaseService';
@@ -7,7 +6,7 @@ import DataTable from '@/components/DataTable';
 import StatCard from '@/components/StatCard';
 
 const RiskMapping: React.FC = () => {
-  const { data: highRiskOccupations, isLoading: isLoadingRisk } = useQuery({
+  const { data: highRiskData, isLoading: isLoadingRisk } = useQuery({
     queryKey: ['highRiskOccupations'],
     queryFn: () => supabaseService.getHighRiskOccupations(),
   });
@@ -17,14 +16,20 @@ const RiskMapping: React.FC = () => {
     queryFn: () => supabaseService.getRiskDistribution(),
   });
 
+  // Extracting roles and total employee count from the new response structure
+  const highRiskOccupations = highRiskData?.roles || [];
+  const totalEmployeesInHighRisk = highRiskData?.totalEmployeesInHighRisk || 0;
+
   const columns = [
     { key: 'title', label: 'Job Title' },
-    { key: 'automationRisk', label: 'Automation Risk', 
+    { 
+      key: 'automationRisk', 
+      label: 'Automation Risk', 
       format: (value: number) => (
         <div className="flex items-center">
           <div className="w-full bg-gray-200 rounded-full h-2.5">
             <div 
-              className={`h-2.5 rounded-full ${value >= 0.7 ? 'bg-red-500' : value >= 0.3 ? 'bg-yellow-500' : 'bg-green-500'}`} 
+              className={`h-2.5 rounded-full ${value >= 0.6 ? 'bg-red-500' : value >= 0.3 ? 'bg-yellow-500' : 'bg-green-500'}`} 
               style={{ width: `${value * 100}%` }}
             ></div>
           </div>
@@ -46,7 +51,7 @@ const RiskMapping: React.FC = () => {
     { name: 'Low Risk', value: riskDistribution?.lowRisk || 0 },
   ];
 
-  const departmentData = highRiskOccupations?.map(o => ({
+  const departmentData = highRiskOccupations.map(o => ({
     name: o.title,
     value: o.departmentCount,
   })) || [];
@@ -81,7 +86,7 @@ const RiskMapping: React.FC = () => {
         />
         <StatCard 
           title="Employees in High Risk Roles" 
-          value={highRiskOccupations?.reduce((sum, o) => sum + o.departmentCount, 0) || 0}
+          value={totalEmployeesInHighRisk}
           type="increase"
           color="blue"
         />
@@ -107,7 +112,7 @@ const RiskMapping: React.FC = () => {
 
       <DataTable 
         title="Top 10 Roles at Highest Risk of Automation" 
-        data={highRiskOccupations || []}
+        data={highRiskOccupations}
         columns={columns}
       />
     </div>
