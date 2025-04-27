@@ -1,0 +1,25 @@
+
+import React from 'react';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { FileText } from 'lucide-react';
+
+interface AnalysisCardProps {
+  title: string;
+  content: string;
+}
+
+const AnalysisCard = ({ title, content }: AnalysisCardProps) => {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center gap-2 py-2">
+        <FileText className="h-4 w-4" />
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="py-2">
+        <p className="text-sm">{content}</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default AnalysisCard;
