@@ -1,5 +1,4 @@
-
-const API_BASE_URL = 'http://oxford4-capstone-alb-200937979.eu-west-1.elb.amazonaws.com';
+const API_BASE_URL = 'https://oxford4-capstone-alb-200937979.eu-west-1.elb.amazonaws.com';
 
 export interface ProcessMiningResponse {
   status: string;
