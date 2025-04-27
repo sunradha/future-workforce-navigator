@@ -2,13 +2,15 @@
 const API_BASE_URL = 'http://oxford4-capstone-alb-200937979.eu-west-1.elb.amazonaws.com';
 
 export interface ProcessMiningResponse {
-  process_mining_result: string;
-  knowledge_graph: string;
-  causal_graph: string;
-  reasoning_type: string;
-  reasoning_justification: string;
-  reasoning_intent: string;
-  reasoning_intent_justification: string;
+  status: string;
+  result: {
+    reasoning_type: string;
+    reasoning_justification: string;
+    intent: string;
+    intent_justification: string;
+    reasoning_answer: string;
+    graph: string;
+  };
 }
 
 export const getProcessMiningAnalysis = async (prompt: string): Promise<ProcessMiningResponse> => {
@@ -31,4 +33,3 @@ export const getProcessMiningAnalysis = async (prompt: string): Promise<ProcessM
     throw error;
   }
 };
-

@@ -41,11 +41,15 @@ const ProcessMining = () => {
   const { toast } = useToast();
 
   const handleAnalysis = async (question: string) => {
+    if (!question.trim()) return;
+    
     setLoading(true);
     try {
       const data = await getProcessMiningAnalysis(question);
+      console.log("API Response:", data);
       setResults(data);
     } catch (error) {
+      console.error("Error during analysis:", error);
       toast({
         title: "Error",
         description: "Failed to fetch analysis. Please try again.",
@@ -88,7 +92,14 @@ const ProcessMining = () => {
                 disabled={loading || !selectedQuestion}
                 className="w-full"
               >
-                Analyze
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  "Analyze"
+                )}
               </Button>
             </TabsContent>
             
@@ -105,7 +116,14 @@ const ProcessMining = () => {
                   disabled={loading || !customQuestion.trim()}
                   className="w-full"
                 >
-                  Analyze
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    "Analyze"
+                  )}
                 </Button>
               </div>
             </TabsContent>
@@ -113,7 +131,7 @@ const ProcessMining = () => {
         </CardContent>
       </Card>
 
-      {results && (
+      {results && results.result && (
         <>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-4">
@@ -123,7 +141,7 @@ const ProcessMining = () => {
                   <CardTitle className="text-sm font-medium">Reasoning Type</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-2">
-                  <p className="text-sm">{results.reasoning_type}</p>
+                  <p className="text-sm">{results.result.reasoning_type}</p>
                 </CardContent>
               </Card>
               
@@ -133,7 +151,7 @@ const ProcessMining = () => {
                   <CardTitle className="text-sm font-medium">Reasoning Justification</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-2">
-                  <p className="text-sm">{results.reasoning_justification}</p>
+                  <p className="text-sm">{results.result.reasoning_justification}</p>
                 </CardContent>
               </Card>
             </div>
@@ -145,7 +163,7 @@ const ProcessMining = () => {
                   <CardTitle className="text-sm font-medium">Intent</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-2">
-                  <p className="text-sm">{results.reasoning_intent}</p>
+                  <p className="text-sm">{results.result.intent}</p>
                 </CardContent>
               </Card>
               
@@ -155,7 +173,7 @@ const ProcessMining = () => {
                   <CardTitle className="text-sm font-medium">Intent Justification</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-2">
-                  <p className="text-sm">{results.reasoning_intent_justification}</p>
+                  <p className="text-sm">{results.result.intent_justification}</p>
                 </CardContent>
               </Card>
             </div>
@@ -167,13 +185,13 @@ const ProcessMining = () => {
               <CardTitle>Analysis Result</CardTitle>
             </CardHeader>
             <CardContent className="pt-2">
-              <p>{results.process_mining_result}</p>
+              <p>{results.result.reasoning_answer}</p>
             </CardContent>
           </Card>
         </>
       )}
 
-      {loading && (
+      {loading && !results && (
         <div className="flex items-center justify-center p-4">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
