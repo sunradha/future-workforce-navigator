@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +30,7 @@ const ProcessMining = () => {
   const [results, setResults] = useState<ProcessMiningResponse | null>(null);
   const [customQuestion, setCustomQuestion] = useState('');
   const [selectedQuestion, setSelectedQuestion] = useState('');
+  const [showResults, setShowResults] = useState(true);
   const { toast } = useToast();
 
   const handleAnalysis = async (question: string) => {
@@ -39,6 +41,7 @@ const ProcessMining = () => {
       const data = await getProcessMiningAnalysis(question);
       console.log("API Response:", data);
       setResults(data);
+      setShowResults(true);
     } catch (error) {
       console.error("Error during analysis:", error);
       toast({
@@ -49,6 +52,10 @@ const ProcessMining = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTabChange = () => {
+    setShowResults(false);
   };
 
   return (
@@ -65,12 +72,13 @@ const ProcessMining = () => {
             onCustomQuestionChange={setCustomQuestion}
             onSelectedQuestionChange={setSelectedQuestion}
             onAnalyze={handleAnalysis}
+            onTabChange={handleTabChange}
             questions={questions}
           />
         </CardContent>
       </Card>
 
-      {results && <AnalysisResults results={results} />}
+      {results && <AnalysisResults results={results} visible={showResults} />}
 
       {loading && !results && (
         <div className="flex items-center justify-center p-4">

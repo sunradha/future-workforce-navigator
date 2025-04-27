@@ -6,35 +6,36 @@ import ProcessGraph from './ProcessGraph';
 
 interface AnalysisResultsProps {
   results: ProcessMiningResponse;
+  visible: boolean;
 }
 
-const AnalysisResults = ({ results }: AnalysisResultsProps) => {
-  if (!results?.result) return null;
+const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
+  if (!results?.result || !visible) return null;
 
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-2">
-          <AnalysisCard 
-            title="Reasoning Type"
-            content={results.result.reasoning_type}
-          />
-          <AnalysisCard 
-            title="Reasoning Justification"
-            content={results.result.reasoning_justification}
-          />
-        </div>
+        <AnalysisCard 
+          title="Reasoning Type"
+          content={results.result.reasoning_type}
+          inline={true}
+        />
+        <AnalysisCard 
+          title="Intent"
+          content={results.result.intent}
+          inline={true}
+        />
+      </div>
 
-        <div className="space-y-2">
-          <AnalysisCard 
-            title="Intent"
-            content={results.result.intent}
-          />
-          <AnalysisCard 
-            title="Intent Justification"
-            content={results.result.intent_justification}
-          />
-        </div>
+      <div className="space-y-2">
+        <AnalysisCard 
+          title="Reasoning Justification"
+          content={results.result.reasoning_justification}
+        />
+        <AnalysisCard 
+          title="Intent Justification"
+          content={results.result.intent_justification}
+        />
       </div>
 
       <AnalysisCard 
