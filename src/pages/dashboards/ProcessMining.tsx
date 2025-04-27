@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getProcessMiningAnalysis, ProcessMiningResponse } from '@/services/ProcessMiningService';
-import { Loader2, FileText } from 'lucide-react';
+import { Loader2, FileText, Image as ImageIcon } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -61,10 +61,10 @@ const ProcessMining = () => {
   };
 
   return (
-    <div className="grid gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Analysis</CardTitle>
+    <div className="grid gap-2">
+      <Card className="mb-2">
+        <CardHeader className="py-3">
+          <CardTitle className="text-lg">AI Analysis</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="predefined" className="w-full">
@@ -73,7 +73,7 @@ const ProcessMining = () => {
               <TabsTrigger value="custom">Ask Custom Question</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="predefined" className="space-y-4">
+            <TabsContent value="predefined" className="space-y-2">
               <Select value={selectedQuestion} onValueChange={(value) => setSelectedQuestion(value)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a question" />
@@ -104,12 +104,12 @@ const ProcessMining = () => {
             </TabsContent>
             
             <TabsContent value="custom">
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <Textarea
                   placeholder="Type your question here..."
                   value={customQuestion}
                   onChange={(e) => setCustomQuestion(e.target.value)}
-                  className="min-h-[100px]"
+                  className="min-h-[80px]"
                 />
                 <Button 
                   onClick={() => handleAnalysis(customQuestion)}
@@ -133,46 +133,46 @@ const ProcessMining = () => {
 
       {results && results.result && (
         <>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
               <Card>
-                <CardHeader className="flex flex-row items-center gap-2">
+                <CardHeader className="flex flex-row items-center gap-2 py-2">
                   <FileText className="h-4 w-4" />
                   <CardTitle className="text-sm font-medium">Reasoning Type</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-2">
+                <CardContent className="py-2">
                   <p className="text-sm">{results.result.reasoning_type}</p>
                 </CardContent>
               </Card>
               
               <Card>
-                <CardHeader className="flex flex-row items-center gap-2">
+                <CardHeader className="flex flex-row items-center gap-2 py-2">
                   <FileText className="h-4 w-4" />
                   <CardTitle className="text-sm font-medium">Reasoning Justification</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-2">
+                <CardContent className="py-2">
                   <p className="text-sm">{results.result.reasoning_justification}</p>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               <Card>
-                <CardHeader className="flex flex-row items-center gap-2">
+                <CardHeader className="flex flex-row items-center gap-2 py-2">
                   <FileText className="h-4 w-4" />
                   <CardTitle className="text-sm font-medium">Intent</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-2">
+                <CardContent className="py-2">
                   <p className="text-sm">{results.result.intent}</p>
                 </CardContent>
               </Card>
               
               <Card>
-                <CardHeader className="flex flex-row items-center gap-2">
+                <CardHeader className="flex flex-row items-center gap-2 py-2">
                   <FileText className="h-4 w-4" />
                   <CardTitle className="text-sm font-medium">Intent Justification</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-2">
+                <CardContent className="py-2">
                   <p className="text-sm">{results.result.intent_justification}</p>
                 </CardContent>
               </Card>
@@ -180,14 +180,30 @@ const ProcessMining = () => {
           </div>
 
           <Card>
-            <CardHeader className="flex flex-row items-center gap-2">
+            <CardHeader className="flex flex-row items-center gap-2 py-2">
               <FileText className="h-4 w-4" />
-              <CardTitle>Analysis Result</CardTitle>
+              <CardTitle className="text-sm font-medium">Analysis Result</CardTitle>
             </CardHeader>
-            <CardContent className="pt-2">
-              <p>{results.result.reasoning_answer}</p>
+            <CardContent className="py-2">
+              <p className="text-sm">{results.result.reasoning_answer}</p>
             </CardContent>
           </Card>
+
+          {results.result.graph && (
+            <Card>
+              <CardHeader className="flex flex-row items-center gap-2 py-2">
+                <ImageIcon className="h-4 w-4" />
+                <CardTitle className="text-sm font-medium">Process Graph</CardTitle>
+              </CardHeader>
+              <CardContent className="py-2">
+                <img 
+                  src={`data:image/png;base64,${results.result.graph}`}
+                  alt="Process Mining Graph"
+                  className="max-w-full h-auto"
+                />
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
 

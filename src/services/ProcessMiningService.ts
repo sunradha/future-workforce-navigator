@@ -1,5 +1,4 @@
-
-const API_BASE_URL = 'https://oxford4-capstone-alb-200937979.eu-west-1.elb.amazonaws.com';
+const API_BASE_URL = 'https://ox4-capstone-api.onrender.com';
 
 export interface ProcessMiningResponse {
   status: string;
