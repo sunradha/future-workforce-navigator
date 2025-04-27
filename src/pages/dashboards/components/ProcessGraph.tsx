@@ -10,11 +10,11 @@ interface ProcessGraphProps {
 const ProcessGraph = ({ graphData }: ProcessGraphProps) => {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-2 py-2">
+      <CardHeader className="flex flex-row items-center gap-1 py-1">
         <ImageIcon className="h-4 w-4" />
         <CardTitle className="text-sm font-medium">Process Graph</CardTitle>
       </CardHeader>
-      <CardContent className="py-2">
+      <CardContent className="py-1">
         <img 
           src={`data:image/png;base64,${graphData}`}
           alt="Process Mining Graph"

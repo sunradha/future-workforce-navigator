@@ -12,7 +12,7 @@ const AnalysisResults = ({ results }: AnalysisResultsProps) => {
   if (!results?.result) return null;
 
   return (
-    <>
+    <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-2">
           <AnalysisCard 
@@ -45,7 +45,7 @@ const AnalysisResults = ({ results }: AnalysisResultsProps) => {
       {results.result.graph && (
         <ProcessGraph graphData={results.result.graph} />
       )}
-    </>
+    </div>
   );
 };
 

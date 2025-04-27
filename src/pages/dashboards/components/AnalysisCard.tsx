@@ -11,11 +11,11 @@ interface AnalysisCardProps {
 const AnalysisCard = ({ title, content }: AnalysisCardProps) => {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-2 py-2">
+      <CardHeader className="flex flex-row items-center gap-1 py-1">
         <FileText className="h-4 w-4" />
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="py-2">
+      <CardContent className="py-1">
         <p className="text-sm">{content}</p>
       </CardContent>
     </Card>
