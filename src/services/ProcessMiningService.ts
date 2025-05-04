@@ -7,13 +7,14 @@ export interface ProcessMiningResponse {
     reasoning_type: string;
     reasoning_justification: string;
     reasoning_path?: string;
-    intent: string;
-    intent_justification: string;
+    intent?: string;
+    intent_justification?: string;
     reasoning_answer: string;
+    visualization_type?: string;
     graph: string;
     chart?: {
       type: string;
-      data: {
+      data?: {
         x: any[];
         y: number[];
         labels: string[];
@@ -40,6 +41,7 @@ export interface ProcessMiningResponse {
 
 export const getProcessMiningAnalysis = async (prompt: string): Promise<ProcessMiningResponse> => {
   try {
+    console.log("Sending request with prompt:", prompt);
     const response = await fetch(`${API_BASE_URL}/api/ask-question`, {
       method: 'POST',
       headers: {
@@ -52,7 +54,9 @@ export const getProcessMiningAnalysis = async (prompt: string): Promise<ProcessM
       throw new Error('Failed to fetch process mining analysis');
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log("Received API response:", data);
+    return data;
   } catch (error) {
     console.error('Error fetching process mining analysis:', error);
     throw error;

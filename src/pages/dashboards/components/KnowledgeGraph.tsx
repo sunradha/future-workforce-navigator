@@ -46,12 +46,17 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 350, isSchema = false }:
       })
     : edges as Edge[];
 
-  // Filter out edges with null source or target
-  const validEdges = processedEdges.filter(edge => edge.source !== null && edge.target !== null);
+  // Filter out edges with null or invalid source or target
+  const validEdges = processedEdges.filter(edge => 
+    edge.source && edge.target && 
+    // Only include edges where both source and target exist in the nodes
+    processedNodes.some(node => node.id === edge.source) && 
+    processedNodes.some(node => node.id === edge.target)
+  );
 
   useEffect(() => {
     if (!svgRef.current || !processedNodes.length) return;
-
+    
     // Clear previous graph
     d3.select(svgRef.current).selectAll("*").remove();
 
@@ -66,8 +71,10 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 350, isSchema = false }:
       .force("charge", d3.forceManyBody().strength(-200))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
-    // Prepare the data
+    // Prepare the data - ensure we're working with objects, not strings
     const nodeData = processedNodes.map(node => ({...node}));
+    
+    // For the linkData, ensure we're using node objects for source and target
     const linkData = validEdges.map(edge => ({
       source: edge.source,
       target: edge.target,

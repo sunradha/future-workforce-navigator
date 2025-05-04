@@ -22,6 +22,8 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
     results.result.chart.schema_kg && 
     results.result.chart.data_kg;
 
+  console.log("Knowledge graph data:", hasKnowledgeGraph, results.result.chart?.schema_kg, results.result.chart?.data_kg);
+
   return (
     <div className="space-y-3 animate-fade-in">
       <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
@@ -34,7 +36,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         
         <AnalysisCard 
           title="Reasoning Path"
-          content={results.result.reasoning_path || results.result.intent_justification}
+          content={results.result.reasoning_path || (results.result.intent_justification || '')}
           inline={true}
           type="path"
         />
@@ -48,7 +50,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        {results.result.graph && (
+        {results.result.graph && !hasKnowledgeGraph && (
           <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
             <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
               <Route className="h-4 w-4 text-blue-500" />
