@@ -1,3 +1,4 @@
+
 import { 
   Occupation, 
   ReskillEvent, 
@@ -179,22 +180,38 @@ async getHighRiskOccupations(): Promise<{ totalEmployeesInHighRisk: number; role
   }
 
   async getCertificationRateByOccupation(): Promise<ChartData> {
+    // Fix the query to properly join tables and avoid relationship errors
     const { data, error } = await supabase
       .from('workforce_reskilling_cases')
       .select(`
         certification_earned,
-        employee_profile!inner (
-          job_risk!inner (
-            job_title
-          )
-        )
-      `);
+        soc_code
+      `)
+      .not('soc_code', 'is', null);
 
     if (error) throw error;
 
+    // Get job titles for the SOC codes
+    const socCodes = [...new Set(data.map(item => item.soc_code))].filter(Boolean);
+    
+    const { data: jobData, error: jobError } = await supabase
+      .from('job_risk')
+      .select('soc_code, job_title')
+      .in('soc_code', socCodes);
+
+    if (jobError) throw jobError;
+
+    // Create a map of soc_code to job_title
+    const jobTitleMap = jobData.reduce((acc, job) => {
+      acc[job.soc_code] = job.job_title || 'Unknown Job';
+      return acc;
+    }, {} as Record<number, string>);
+
+    // Group by soc_code and calculate certification rates
     const occupationStats = data.reduce((acc: { [key: string]: { total: number; certified: number } }, item) => {
-      const jobTitle = item.employee_profile?.job_risk?.job_title;
-      if (!jobTitle) return acc;
+      if (!item.soc_code) return acc;
+      
+      const jobTitle = jobTitleMap[item.soc_code] || `Job ID: ${item.soc_code}`;
       
       if (!acc[jobTitle]) {
         acc[jobTitle] = { total: 0, certified: 0 };
