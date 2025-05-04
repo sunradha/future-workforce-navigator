@@ -15,8 +15,8 @@ const AnalysisCard = ({ title, content, inline = false }: AnalysisCardProps) => 
       <CardHeader className="flex flex-row items-center gap-1 py-1">
         <FileText className="h-4 w-4" />
         {inline ? (
-          <div className="flex items-center gap-1">
-            <CardTitle className="text-sm font-medium">{title}:</CardTitle>
+          <div className="flex items-start gap-1">
+            <CardTitle className="text-sm font-medium whitespace-nowrap">{title}:</CardTitle>
             <span className="text-sm">{content}</span>
           </div>
         ) : (
