@@ -4,6 +4,7 @@ import { ProcessMiningResponse } from '@/services/ProcessMiningService';
 import AnalysisCard from './AnalysisCard';
 import ProcessGraph from './ProcessGraph';
 import ChartCard from '@/components/ChartCard';
+import { Route } from 'lucide-react';
 
 interface AnalysisResultsProps {
   results: ProcessMiningResponse;

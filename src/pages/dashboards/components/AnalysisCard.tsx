@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { FileText, Route, MessageSquare, BarChart, PieChart, ChartIcon } from 'lucide-react';
+import { FileText, Route, MessageSquare, BarChart, PieChart, ChartLineIcon } from 'lucide-react';
 
 interface AnalysisCardProps {
   title: string;
