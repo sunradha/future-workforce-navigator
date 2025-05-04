@@ -1,14 +1,31 @@
+
 const API_BASE_URL = 'https://ox4-capstone-api.onrender.com';
+
+export interface GraphData {
+  type: string;
+  data: any;
+  schema_kg?: {
+    nodes: any[];
+    edges: any[];
+  };
+  data_kg?: {
+    nodes: any[];
+    edges: any[];
+  };
+}
 
 export interface ProcessMiningResponse {
   status: string;
   result: {
     reasoning_type: string;
     reasoning_justification: string;
-    intent: string;
-    intent_justification: string;
+    reasoning_path: string;
+    intent?: string;
+    intent_justification?: string;
     reasoning_answer: string;
-    graph: string;
+    graph?: string;
+    chart?: GraphData;
+    error?: string;
   };
 }
 

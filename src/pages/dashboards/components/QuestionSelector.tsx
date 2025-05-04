@@ -1,25 +1,18 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface QuestionSelectorProps {
   loading: boolean;
   customQuestion: string;
   selectedQuestion: string;
-  onCustomQuestionChange: (value: string) => void;
-  onSelectedQuestionChange: (value: string) => void;
+  onCustomQuestionChange: (question: string) => void;
+  onSelectedQuestionChange: (question: string) => void;
   onAnalyze: (question: string) => void;
-  onTabChange: (value: string) => void;
+  onTabChange: () => void;
   questions: string[];
 }
 
@@ -31,74 +24,80 @@ const QuestionSelector = ({
   onSelectedQuestionChange,
   onAnalyze,
   onTabChange,
-  questions
+  questions,
 }: QuestionSelectorProps) => {
   return (
-    <Tabs defaultValue="predefined" className="w-full" onValueChange={onTabChange}>
+    <Tabs defaultValue="predefined" onValueChange={onTabChange}>
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="predefined">Pre-defined Questions</TabsTrigger>
         <TabsTrigger value="custom">Ask Custom Question</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="predefined" className="space-y-2">
-        <Select value={selectedQuestion} onValueChange={onSelectedQuestionChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a question" />
-          </SelectTrigger>
-          <SelectContent>
-            {questions.map((question, index) => (
-              <SelectItem key={index} value={question}>
-                {question}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <TabsContent value="predefined" className="space-y-4">
+        <div className="grid grid-cols-1 gap-2">
+          {questions.map((question, index) => (
+            <Button
+              key={index}
+              variant={selectedQuestion === question ? "default" : "outline"}
+              className="justify-start h-auto py-2 px-3 text-left"
+              onClick={() => onSelectedQuestionChange(question)}
+            >
+              {question}
+            </Button>
+          ))}
+        </div>
         
-        <Button 
+        <Button
+          className="w-full mt-4"
           onClick={() => onAnalyze(selectedQuestion)}
           disabled={loading || !selectedQuestion}
-          className="w-full"
         >
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...
             </>
           ) : (
-            "Analyze"
+            'Analyze'
           )}
         </Button>
       </TabsContent>
       
-      <TabsContent value="custom">
-        <div className="space-y-2">
-          <Textarea
+      <TabsContent value="custom" className="space-y-4">
+        <div>
+          <Input
             placeholder="Type your question here..."
             value={customQuestion}
             onChange={(e) => onCustomQuestionChange(e.target.value)}
-            className="min-h-[40px] resize-none overflow-hidden"
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = target.scrollHeight + 'px';
+            className="w-full resize-none"
+            style={{
+              minHeight: '40px',
+              height: 'auto'
             }}
-            rows={1}
+            disabled={loading}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (customQuestion.trim()) {
+                  onAnalyze(customQuestion);
+                }
+              }
+            }}
           />
-          <Button 
-            onClick={() => onAnalyze(customQuestion)}
-            disabled={loading || !customQuestion.trim()}
-            className="w-full"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              "Analyze"
-            )}
-          </Button>
         </div>
+        
+        <Button
+          className="w-full"
+          onClick={() => onAnalyze(customQuestion)}
+          disabled={loading || !customQuestion.trim()}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...
+            </>
+          ) : (
+            'Analyze'
+          )}
+        </Button>
       </TabsContent>
     </Tabs>
   );
