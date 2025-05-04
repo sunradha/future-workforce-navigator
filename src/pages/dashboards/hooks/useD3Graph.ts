@@ -41,6 +41,12 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .force("charge", d3.forceManyBody().strength(-300))
       .force("center", d3.forceCenter(containerWidth / 2, height / 2));
 
+    // Helper function to clean text by removing quotes
+    const cleanText = (text: string) => {
+      if (typeof text !== 'string') return text;
+      return text.replace(/['"]+/g, '');
+    };
+
     // Add links (edges)
     const link = g.append("g")
       .selectAll("line")
@@ -55,7 +61,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .selectAll("text")
       .data(edges)
       .enter().append("text")
-      .text(d => d.relationship)
+      .text(d => cleanText(d.relationship))
       .attr("font-size", "10px")
       .attr("text-anchor", "middle")
       .attr("fill", "#777")
@@ -73,7 +79,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     const node = nodeGroup.append("circle")
       .attr("r", 10)
-      .attr("fill", (d: any) => color(d.type || "default"))
+      .attr("fill", (d: any) => color(cleanText(d.type) || "default"))
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
@@ -81,7 +87,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     // Add node labels
     const nodeLabels = nodeGroup.append("text")
-      .text((d: any) => d.label)
+      .text((d: any) => cleanText(d.label))
       .attr("font-size", "12px")
       .attr("dx", 15)
       .attr("dy", 4)
@@ -89,7 +95,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     // Add tooltips for nodes
     node.append("title")
-      .text((d: any) => `${d.label} (${d.type || "Unknown Type"})`);
+      .text((d: any) => `${cleanText(d.label)} (${cleanText(d.type) || "Unknown Type"})`);
 
     simulation.nodes(nodes as any).on("tick", ticked);
     (simulation.force("link") as d3.ForceLink<any, any>).links(edges);

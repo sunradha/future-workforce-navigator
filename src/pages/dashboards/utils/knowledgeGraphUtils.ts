@@ -6,7 +6,8 @@ import { Node, Edge } from '../types/knowledgeGraphTypes';
  */
 export const processSchemaNodes = (nodes: string[]): Node[] => {
   return nodes.map(node => {
-    const [id, type] = node.split(': ');
+    // Split by colon and remove any quotes
+    const [id, type] = node.split(': ').map(part => part.replace(/['"]+/g, '').trim());
     return { id, label: id, type };
   });
 };
@@ -18,10 +19,12 @@ export const processSchemaEdges = (edges: string[]): Edge[] => {
   return edges.map(edge => {
     const parsed = edge.match(/source: (.*), target: (.*), relationship: (.*)/);
     if (!parsed) return { source: '', target: '', relationship: '' };
+    
+    // Remove any quotes from parsed values
     return {
-      source: parsed[1],
-      target: parsed[2],
-      relationship: parsed[3]
+      source: parsed[1].replace(/['"]+/g, '').trim(),
+      target: parsed[2].replace(/['"]+/g, '').trim(),
+      relationship: parsed[3].replace(/['"]+/g, '').trim()
     };
   });
 };
