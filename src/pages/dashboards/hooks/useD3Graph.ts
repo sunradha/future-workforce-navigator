@@ -14,6 +14,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
     
+    console.log(`Rendering graph with ${nodes.length} nodes and ${edges.length} edges`);
+    
     // Clear previous graph
     d3.select(svgRef.current).selectAll("*").remove();
 
@@ -35,38 +37,59 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Create a container for the graph
     const g = svg.append("g");
 
-    // Create the graph simulation with adjusted parameters
-    const simulation = d3.forceSimulation()
-      // Reduce link distance for tighter graph
-      .force("link", d3.forceLink().id((d: any) => d.id).distance(100))
-      // Decrease repulsion strength (was -300)
-      .force("charge", d3.forceManyBody().strength(-150))
-      // Add collision force to prevent overlap
-      .force("collide", d3.forceCollide().radius(30))
-      .force("center", d3.forceCenter(containerWidth / 2, height / 2))
-      // Add x and y forces to bring nodes toward center more strongly
-      .force("x", d3.forceX(containerWidth / 2).strength(0.05))
-      .force("y", d3.forceY(height / 2).strength(0.05));
+    // Limit the number of nodes and edges to improve performance
+    const maxNodes = 50; // Limit to 50 nodes for performance
+    const limitedNodes = nodes.length > maxNodes 
+      ? nodes.slice(0, maxNodes) 
+      : nodes;
+    
+    // Filter edges to only include those connecting to our limited nodes
+    const nodeIds = new Set(limitedNodes.map(n => n.id));
+    const limitedEdges = edges.filter(e => 
+      nodeIds.has(e.source) && nodeIds.has(e.target)
+    );
+    
+    if (nodes.length > maxNodes) {
+      console.log(`Limited graph to ${maxNodes} nodes out of ${nodes.length} for performance`);
+    }
 
-    // Helper function to clean text by removing quotes
-    const cleanText = (text: string) => {
-      if (typeof text !== 'string') return text;
-      return text.replace(/['"]+/g, '');
+    // Create the graph simulation with optimized parameters
+    const simulation = d3.forceSimulation()
+      .force("link", d3.forceLink().id((d: any) => d.id).distance(80))
+      .force("charge", d3.forceManyBody().strength(-120))
+      .force("collide", d3.forceCollide().radius(40).strength(1))
+      .force("center", d3.forceCenter(containerWidth / 2, height / 2))
+      .force("x", d3.forceX(containerWidth / 2).strength(0.1))
+      .force("y", d3.forceY(height / 2).strength(0.1));
+
+    // Helper function to clean text by removing quotes and handling objects
+    const cleanText = (text: string | any) => {
+      if (typeof text !== 'string') {
+        return text?.toString?.() || 'Unknown';
+      }
+      
+      // Remove quotes and [object Object] text
+      let cleaned = text.replace(/['"]+/g, '');
+      if (cleaned.includes('[object Object]')) {
+        cleaned = cleaned.replace(/\[object Object\]/g, 'Unknown');
+      }
+      return cleaned;
     };
 
     // Add links (edges)
     const link = g.append("g")
       .selectAll("line")
-      .data(edges)
+      .data(limitedEdges)
       .enter().append("line")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0.6)
       .attr("stroke-width", 1.5);
 
-    // Add link labels
+    // Add link labels - only show for up to 30 edges to avoid clutter
+    const maxEdgeLabels = 30;
     const linkLabels = g.append("g")
       .selectAll("text")
-      .data(edges)
+      .data(limitedEdges.slice(0, maxEdgeLabels))
       .enter().append("text")
       .text(d => cleanText(d.relationship))
       .attr("font-size", "10px")
@@ -80,13 +103,17 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Add nodes
     const nodeGroup = g.append("g")
       .selectAll("g")
-      .data(nodes)
+      .data(limitedNodes)
       .enter()
       .append("g");
 
     const node = nodeGroup.append("circle")
       .attr("r", 10)
-      .attr("fill", (d: any) => color(cleanText(d.type) || "default"))
+      .attr("fill", (d: any) => {
+        // Handle possible undefined type
+        const nodeType = cleanText(d.type) || "default";
+        return color(nodeType);
+      })
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
@@ -104,18 +131,17 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     node.append("title")
       .text((d: any) => `${cleanText(d.label)} (${cleanText(d.type) || "Unknown Type"})`);
 
-    simulation.nodes(nodes as any).on("tick", ticked);
-    (simulation.force("link") as d3.ForceLink<any, any>).links(edges);
+    simulation.nodes(limitedNodes as any).on("tick", ticked);
+    (simulation.force("link") as d3.ForceLink<any, any>).links(limitedEdges);
 
-    // Increase alpha target for more heat in the simulation
-    simulation.alpha(1).alphaTarget(0.3).restart();
-    // Let simulation run longer with higher velocity decay
-    simulation.velocityDecay(0.1);
+    // Set a faster simulation that cools down quickly
+    simulation.alpha(0.8).alphaTarget(0).alphaDecay(0.05).velocityDecay(0.2);
     
-    // After some time, let the simulation cool down
+    // Stop simulation after 2 seconds to prevent CPU strain
     setTimeout(() => {
-      simulation.alphaTarget(0);
-    }, 3000);
+      simulation.stop();
+      console.log('Stopped simulation to save resources');
+    }, 2000);
 
     function ticked() {
       link

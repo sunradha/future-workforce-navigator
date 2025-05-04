@@ -6,9 +6,20 @@ import { Node, Edge } from '../types/knowledgeGraphTypes';
  */
 export const processSchemaNodes = (nodes: string[]): Node[] => {
   return nodes.map(node => {
+    if (!node || typeof node !== 'string') {
+      return { id: `unknown-${Math.random().toString(36).substr(2, 9)}`, label: 'Unknown Node', type: 'Unknown' };
+    }
+    
     // Split by colon and remove any quotes
-    const [id, type] = node.split(': ').map(part => part.replace(/['"]+/g, '').trim());
-    return { id, label: id, type };
+    try {
+      const parts = node.split(': ');
+      const id = parts[0]?.replace(/['"]+/g, '').trim() || 'unknown';
+      const type = parts[1]?.replace(/['"]+/g, '').trim() || 'Unknown';
+      return { id, label: id, type };
+    } catch (error) {
+      console.error("Error processing schema node:", node, error);
+      return { id: `error-${Math.random().toString(36).substr(2, 9)}`, label: node.toString(), type: 'Error' };
+    }
   });
 };
 
@@ -17,15 +28,27 @@ export const processSchemaNodes = (nodes: string[]): Node[] => {
  */
 export const processSchemaEdges = (edges: string[]): Edge[] => {
   return edges.map(edge => {
-    const parsed = edge.match(/source: (.*), target: (.*), relationship: (.*)/);
-    if (!parsed) return { source: '', target: '', relationship: '' };
+    if (!edge || typeof edge !== 'string') {
+      return { source: '', target: '', relationship: '' };
+    }
     
-    // Remove any quotes from parsed values
-    return {
-      source: parsed[1].replace(/['"]+/g, '').trim(),
-      target: parsed[2].replace(/['"]+/g, '').trim(),
-      relationship: parsed[3].replace(/['"]+/g, '').trim()
-    };
+    try {
+      const parsed = edge.match(/source: (.*), target: (.*), relationship: (.*)/);
+      if (!parsed) {
+        console.warn("Could not parse edge:", edge);
+        return { source: '', target: '', relationship: '' };
+      }
+      
+      // Remove any quotes from parsed values
+      return {
+        source: parsed[1]?.replace(/['"]+/g, '').trim() || '',
+        target: parsed[2]?.replace(/['"]+/g, '').trim() || '',
+        relationship: parsed[3]?.replace(/['"]+/g, '').trim() || ''
+      };
+    } catch (error) {
+      console.error("Error processing schema edge:", edge, error);
+      return { source: '', target: '', relationship: '' };
+    }
   });
 };
 
@@ -34,6 +57,8 @@ export const processSchemaEdges = (edges: string[]): Edge[] => {
  */
 export const filterValidEdges = (edges: Edge[]): Edge[] => {
   return edges.filter(edge => 
+    edge && 
+    typeof edge === 'object' &&
     edge.source && edge.target && 
     edge.source !== null && edge.target !== null
   );
@@ -43,31 +68,38 @@ export const filterValidEdges = (edges: Edge[]): Edge[] => {
  * Create a complete set of nodes including those referenced in edges
  */
 export const createCompleteNodeSet = (nodes: Node[], edges: Edge[]): Node[] => {
-  const nodesMap = new Map<string, Node>();
-  
-  // Add all existing nodes
-  nodes.forEach(node => {
-    nodesMap.set(node.id, {...node});
-  });
-  
-  // Add missing nodes from edges
-  edges.forEach(edge => {
-    if (!nodesMap.has(edge.source)) {
-      nodesMap.set(edge.source, {
-        id: edge.source,
-        label: edge.source,
-        type: "Training Program" // Assuming missing nodes are training programs
-      });
-    }
+  try {
+    const nodesMap = new Map<string, Node>();
     
-    if (!nodesMap.has(edge.target)) {
-      nodesMap.set(edge.target, {
-        id: edge.target,
-        label: `Unknown (${edge.target})`,
-        type: "Unknown"
-      });
-    }
-  });
-  
-  return Array.from(nodesMap.values());
+    // Add all existing nodes
+    nodes.forEach(node => {
+      if (node && node.id) {
+        nodesMap.set(node.id, {...node});
+      }
+    });
+    
+    // Add missing nodes from edges
+    edges.forEach(edge => {
+      if (edge.source && !nodesMap.has(edge.source)) {
+        nodesMap.set(edge.source, {
+          id: edge.source,
+          label: edge.source,
+          type: "Training Program" // Assuming missing nodes are training programs
+        });
+      }
+      
+      if (edge.target && !nodesMap.has(edge.target)) {
+        nodesMap.set(edge.target, {
+          id: edge.target,
+          label: edge.target,
+          type: "Difficulty Score"
+        });
+      }
+    });
+    
+    return Array.from(nodesMap.values());
+  } catch (error) {
+    console.error("Error creating complete node set:", error);
+    return nodes;
+  }
 };

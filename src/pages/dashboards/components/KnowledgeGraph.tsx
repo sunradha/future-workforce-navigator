@@ -1,6 +1,6 @@
 
-import React, { useRef } from 'react';
-import { Network } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Network, Loader2 } from 'lucide-react';
 import { KnowledgeGraphProps, Node, Edge } from '../types/knowledgeGraphTypes';
 import { 
   processSchemaNodes,
@@ -9,9 +9,13 @@ import {
   createCompleteNodeSet
 } from '../utils/knowledgeGraphUtils';
 import { useD3Graph } from '../hooks/useD3Graph';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }: KnowledgeGraphProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [nodeCount, setNodeCount] = useState(0);
+  const [edgeCount, setEdgeCount] = useState(0);
 
   // Process nodes and edges if they are in string format
   const processedNodes = isSchema 
@@ -28,6 +32,20 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }:
   // Create complete node set including nodes from edges
   const completeNodeSet = createCompleteNodeSet(processedNodes, validEdges);
 
+  // Track data metrics for user feedback
+  useEffect(() => {
+    setNodeCount(completeNodeSet.length);
+    setEdgeCount(validEdges.length);
+    
+    // Apply a short loading state to ensure DOM is ready for D3
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [completeNodeSet.length, validEdges.length]);
+
   // Use D3 graph hook for rendering
   useD3Graph({
     svgRef,
@@ -38,12 +56,28 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }:
 
   return (
     <div className="w-full h-full p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
-      <h3 className="text-base font-medium mb-3 flex items-center gap-2 text-purple-600">
-        <Network className="h-5 w-5" />
-        {title}
-      </h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-base font-medium flex items-center gap-2 text-purple-600">
+          <Network className="h-5 w-5" />
+          {title}
+        </h3>
+        <span className="text-xs text-gray-500">
+          {nodeCount} nodes • {edgeCount} connections
+          {nodeCount > 50 && 
+            <span className="ml-1 text-amber-600">(showing top 50)</span>
+          }
+        </span>
+      </div>
+      
       <div className="w-full overflow-hidden rounded-md bg-white" style={{ height: `${height}px` }}>
-        <svg ref={svgRef} className="w-full h-full"></svg>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+            <span className="ml-2 text-sm text-gray-600">Initializing graph...</span>
+          </div>
+        ) : (
+          <svg ref={svgRef} className="w-full h-full"></svg>
+        )}
       </div>
     </div>
   );
