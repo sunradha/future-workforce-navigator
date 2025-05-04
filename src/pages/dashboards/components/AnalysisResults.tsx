@@ -3,7 +3,6 @@ import React from 'react';
 import { ProcessMiningResponse } from '@/services/ProcessMiningService';
 import AnalysisCard from './AnalysisCard';
 import ProcessGraph from './ProcessGraph';
-import ChartDisplay from './ChartDisplay';
 
 interface AnalysisResultsProps {
   results: ProcessMiningResponse;
@@ -22,8 +21,8 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
           inline={true}
         />
         <AnalysisCard 
-          title="Reasoning Path"
-          content={results.result.reasoning_path}
+          title="Intent"
+          content={results.result.intent}
           inline={true}
         />
       </div>
@@ -33,22 +32,16 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
           title="Reasoning Justification"
           content={results.result.reasoning_justification}
         />
-        {results.result.intent_justification && (
-          <AnalysisCard 
-            title="Intent Justification"
-            content={results.result.intent_justification}
-          />
-        )}
+        <AnalysisCard 
+          title="Intent Justification"
+          content={results.result.intent_justification}
+        />
       </div>
 
       <AnalysisCard 
         title="Analysis Result"
-        content={results.result.reasoning_answer || "No analysis result available"}
+        content={results.result.reasoning_answer}
       />
-
-      {results.result.chart && (
-        <ChartDisplay chartData={results.result.chart} />
-      )}
 
       {results.result.graph && (
         <ProcessGraph graphData={results.result.graph} />

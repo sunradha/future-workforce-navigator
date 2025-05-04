@@ -9,48 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      automation_risk: {
-        Row: {
-          automation_probability: number | null
-          automation_risk_id: number
-          industry_name: string | null
-          job_role_id: number | null
-          jobs_at_high_risk: number | null
-          jobs_at_low_risk: number | null
-          jobs_at_medium_risk: number | null
-          region_id: number | null
-          sector: string | null
-          survey_year: number | null
-          total_jobs_at_risk: number | null
-        }
-        Insert: {
-          automation_probability?: number | null
-          automation_risk_id?: number
-          industry_name?: string | null
-          job_role_id?: number | null
-          jobs_at_high_risk?: number | null
-          jobs_at_low_risk?: number | null
-          jobs_at_medium_risk?: number | null
-          region_id?: number | null
-          sector?: string | null
-          survey_year?: number | null
-          total_jobs_at_risk?: number | null
-        }
-        Update: {
-          automation_probability?: number | null
-          automation_risk_id?: number
-          industry_name?: string | null
-          job_role_id?: number | null
-          jobs_at_high_risk?: number | null
-          jobs_at_low_risk?: number | null
-          jobs_at_medium_risk?: number | null
-          region_id?: number | null
-          sector?: string | null
-          survey_year?: number | null
-          total_jobs_at_risk?: number | null
-        }
-        Relationships: []
-      }
       dim_age_band_rows: {
         Row: {
           age_band: string
@@ -78,108 +36,38 @@ export type Database = {
         }
         Relationships: []
       }
-      dim_industry: {
-        Row: {
-          industry_code: number | null
-          industry_name: string | null
-          sector: string | null
-        }
-        Insert: {
-          industry_code?: number | null
-          industry_name?: string | null
-          sector?: string | null
-        }
-        Update: {
-          industry_code?: number | null
-          industry_name?: string | null
-          sector?: string | null
-        }
-        Relationships: []
-      }
       dim_industry_rows: {
         Row: {
           industry_code: number
           industry_name: string | null
-          sector: string | null
+          notes: string | null
         }
         Insert: {
           industry_code: number
           industry_name?: string | null
-          sector?: string | null
+          notes?: string | null
         }
         Update: {
           industry_code?: number
           industry_name?: string | null
-          sector?: string | null
+          notes?: string | null
         }
         Relationships: []
-      }
-      dim_local_authority: {
-        Row: {
-          local_authority_code: string
-          local_authority_name: string | null
-        }
-        Insert: {
-          local_authority_code: string
-          local_authority_name?: string | null
-        }
-        Update: {
-          local_authority_code?: string
-          local_authority_name?: string | null
-        }
-        Relationships: []
-      }
-      dim_occupation: {
-        Row: {
-          industry_code: number | null
-          job_title: string | null
-          soc_code: number
-        }
-        Insert: {
-          industry_code?: number | null
-          job_title?: string | null
-          soc_code: number
-        }
-        Update: {
-          industry_code?: number | null
-          job_title?: string | null
-          soc_code?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_occupation_industry"
-            columns: ["industry_code"]
-            isOneToOne: false
-            referencedRelation: "dim_industry_rows"
-            referencedColumns: ["industry_code"]
-          },
-        ]
       }
       dim_occupation_rows: {
         Row: {
-          industry_code: number | null
           job_title: string | null
-          soc_code: number
+          soc_code: string
         }
         Insert: {
-          industry_code?: number | null
           job_title?: string | null
-          soc_code: number
+          soc_code: string
         }
         Update: {
-          industry_code?: number | null
           job_title?: string | null
-          soc_code?: number
+          soc_code?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_occupation_industry"
-            columns: ["industry_code"]
-            isOneToOne: false
-            referencedRelation: "dim_industry_rows"
-            referencedColumns: ["industry_code"]
-          },
-        ]
+        Relationships: []
       }
       dim_qualification_rows: {
         Row: {
@@ -221,7 +109,6 @@ export type Database = {
         Row: {
           age_band: string | null
           employee_id: number
-          industry_code: number | null
           local_authority_code: string | null
           qualification: string | null
           sex: string | null
@@ -230,7 +117,6 @@ export type Database = {
         Insert: {
           age_band?: string | null
           employee_id: number
-          industry_code?: number | null
           local_authority_code?: string | null
           qualification?: string | null
           sex?: string | null
@@ -239,7 +125,6 @@ export type Database = {
         Update: {
           age_band?: string | null
           employee_id?: number
-          industry_code?: number | null
           local_authority_code?: string | null
           qualification?: string | null
           sex?: string | null
@@ -247,24 +132,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_employee_industry"
-            columns: ["industry_code"]
-            isOneToOne: false
-            referencedRelation: "dim_industry_rows"
-            referencedColumns: ["industry_code"]
-          },
-          {
-            foreignKeyName: "fk_employee_local_authority"
-            columns: ["local_authority_code"]
-            isOneToOne: false
-            referencedRelation: "dim_local_authority"
-            referencedColumns: ["local_authority_code"]
-          },
-          {
-            foreignKeyName: "fk_employee_occupation"
+            foreignKeyName: "employee_profile_soc_code_fkey"
             columns: ["soc_code"]
             isOneToOne: false
-            referencedRelation: "dim_occupation_rows"
+            referencedRelation: "job_risk"
             referencedColumns: ["soc_code"]
           },
         ]
@@ -347,54 +218,6 @@ export type Database = {
         }
         Relationships: []
       }
-      ess_survey: {
-        Row: {
-          age_group: string | null
-          education_level: string | null
-          gender: string | null
-          id: number | null
-          job_role_id: string | null
-          metric_name: string | null
-          metric_value: number | null
-          org_type: string | null
-          region_id: number | null
-          sector: string | null
-          site_type: string | null
-          size_band: string | null
-          year: number | null
-        }
-        Insert: {
-          age_group?: string | null
-          education_level?: string | null
-          gender?: string | null
-          id?: number | null
-          job_role_id?: string | null
-          metric_name?: string | null
-          metric_value?: number | null
-          org_type?: string | null
-          region_id?: number | null
-          sector?: string | null
-          site_type?: string | null
-          size_band?: string | null
-          year?: number | null
-        }
-        Update: {
-          age_group?: string | null
-          education_level?: string | null
-          gender?: string | null
-          id?: number | null
-          job_role_id?: string | null
-          metric_name?: string | null
-          metric_value?: number | null
-          org_type?: string | null
-          region_id?: number | null
-          sector?: string | null
-          site_type?: string | null
-          size_band?: string | null
-          year?: number | null
-        }
-        Relationships: []
-      }
       fact_demographic_automation_rows: {
         Row: {
           age_band: string
@@ -426,7 +249,22 @@ export type Database = {
           total?: number | null
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fact_demographic_automation_rows_qualification_fkey"
+            columns: ["qualification"]
+            isOneToOne: false
+            referencedRelation: "dim_qualification_rows"
+            referencedColumns: ["qualification"]
+          },
+          {
+            foreignKeyName: "fact_demographic_automation_rows_year_fkey"
+            columns: ["year"]
+            isOneToOne: false
+            referencedRelation: "dim_time_rows"
+            referencedColumns: ["year"]
+          },
+        ]
       }
       fact_geographic_automation_rows: {
         Row: {
@@ -453,15 +291,7 @@ export type Database = {
           probability_of_automation?: number | null
           year?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_geographic_automation_authority"
-            columns: ["local_authority_code"]
-            isOneToOne: false
-            referencedRelation: "dim_local_authority"
-            referencedColumns: ["local_authority_code"]
-          },
-        ]
+        Relationships: []
       }
       fact_industry_automation_rows: {
         Row: {
@@ -488,15 +318,7 @@ export type Database = {
           probability_of_automation?: number | null
           year?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_industry_automation_industry"
-            columns: ["industry_code"]
-            isOneToOne: false
-            referencedRelation: "dim_industry_rows"
-            referencedColumns: ["industry_code"]
-          },
-        ]
+        Relationships: []
       }
       fact_skill_requirements_rows: {
         Row: {
@@ -522,21 +344,6 @@ export type Database = {
         }
         Relationships: []
       }
-      industry_sector_map: {
-        Row: {
-          industry_name: string | null
-          Sector: string | null
-        }
-        Insert: {
-          industry_name?: string | null
-          Sector?: string | null
-        }
-        Update: {
-          industry_name?: string | null
-          Sector?: string | null
-        }
-        Relationships: []
-      }
       job_risk: {
         Row: {
           automation_probability: number | null
@@ -555,143 +362,12 @@ export type Database = {
         }
         Relationships: []
       }
-      ons_population_meeting_requirements: {
-        Row: {
-          created_at: string | null
-          id: number | null
-          population_meeting_requirements: number | null
-          proportion: number | null
-          soc_code: number | null
-          standard_error: number | null
-          year: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number | null
-          population_meeting_requirements?: number | null
-          proportion?: number | null
-          soc_code?: number | null
-          standard_error?: number | null
-          year?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: number | null
-          population_meeting_requirements?: number | null
-          proportion?: number | null
-          soc_code?: number | null
-          standard_error?: number | null
-          year?: number | null
-        }
-        Relationships: []
-      }
-      ons_soccode_skill_competencylevel: {
-        Row: {
-          "Average competence level (0 to 7 scale)": number | null
-          skill: string | null
-          "Skill O*NET identifier": string | null
-          "SOC 2020 code": number | null
-          "SOC 2020 unit group title": string | null
-        }
-        Insert: {
-          "Average competence level (0 to 7 scale)"?: number | null
-          skill?: string | null
-          "Skill O*NET identifier"?: string | null
-          "SOC 2020 code"?: number | null
-          "SOC 2020 unit group title"?: string | null
-        }
-        Update: {
-          "Average competence level (0 to 7 scale)"?: number | null
-          skill?: string | null
-          "Skill O*NET identifier"?: string | null
-          "SOC 2020 code"?: number | null
-          "SOC 2020 unit group title"?: string | null
-        }
-        Relationships: []
-      }
-      regions: {
-        Row: {
-          country_name: string | null
-          id: number | null
-          local_authority_name: string | null
-          region_name: string | null
-        }
-        Insert: {
-          country_name?: string | null
-          id?: number | null
-          local_authority_name?: string | null
-          region_name?: string | null
-        }
-        Update: {
-          country_name?: string | null
-          id?: number | null
-          local_authority_name?: string | null
-          region_name?: string | null
-        }
-        Relationships: []
-      }
-      soc_code_skill_training_map: {
-        Row: {
-          skill_category: string | null
-          soc_code: number | null
-          training_program: string | null
-        }
-        Insert: {
-          skill_category?: string | null
-          soc_code?: number | null
-          training_program?: string | null
-        }
-        Update: {
-          skill_category?: string | null
-          soc_code?: number | null
-          training_program?: string | null
-        }
-        Relationships: []
-      }
-      training_budgets: {
-        Row: {
-          employees: number | null
-          estab_size: string | null
-          id: number | null
-          sector: string | null
-          trainees: number | null
-          twentytwo_prices_budget_per_employee: number | null
-          twentytwo_prices_budget_per_trainee: number | null
-          twentytwo_prices_budget_total_mn: number | null
-          year: number | null
-        }
-        Insert: {
-          employees?: number | null
-          estab_size?: string | null
-          id?: number | null
-          sector?: string | null
-          trainees?: number | null
-          twentytwo_prices_budget_per_employee?: number | null
-          twentytwo_prices_budget_per_trainee?: number | null
-          twentytwo_prices_budget_total_mn?: number | null
-          year?: number | null
-        }
-        Update: {
-          employees?: number | null
-          estab_size?: string | null
-          id?: number | null
-          sector?: string | null
-          trainees?: number | null
-          twentytwo_prices_budget_per_employee?: number | null
-          twentytwo_prices_budget_per_trainee?: number | null
-          twentytwo_prices_budget_total_mn?: number | null
-          year?: number | null
-        }
-        Relationships: []
-      }
       workforce_reskilling_cases: {
         Row: {
           case_id: number
           certification_earned: boolean | null
           completion_date: string | null
           employee_id: number | null
-          skill_category: string | null
-          soc_code: number | null
           start_date: string | null
           training_program: string | null
         }
@@ -700,8 +376,6 @@ export type Database = {
           certification_earned?: boolean | null
           completion_date?: string | null
           employee_id?: number | null
-          skill_category?: string | null
-          soc_code?: number | null
           start_date?: string | null
           training_program?: string | null
         }
@@ -710,19 +384,10 @@ export type Database = {
           certification_earned?: boolean | null
           completion_date?: string | null
           employee_id?: number | null
-          skill_category?: string | null
-          soc_code?: number | null
           start_date?: string | null
           training_program?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_reskilling_cases_occupation"
-            columns: ["soc_code"]
-            isOneToOne: false
-            referencedRelation: "dim_occupation_rows"
-            referencedColumns: ["soc_code"]
-          },
           {
             foreignKeyName: "workforce_reskilling_cases_employee_id_fkey"
             columns: ["employee_id"]
@@ -739,7 +404,7 @@ export type Database = {
           case_id: number | null
           completion_status: string | null
           event_id: number
-          score: number | null
+          score: string | null
           skill_category: string | null
           timestamp: string | null
         }
@@ -749,7 +414,7 @@ export type Database = {
           case_id?: number | null
           completion_status?: string | null
           event_id: number
-          score?: number | null
+          score?: string | null
           skill_category?: string | null
           timestamp?: string | null
         }
@@ -759,7 +424,7 @@ export type Database = {
           case_id?: number | null
           completion_status?: string | null
           event_id?: number
-          score?: number | null
+          score?: string | null
           skill_category?: string | null
           timestamp?: string | null
         }
@@ -778,10 +443,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_random_soc_code: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
