@@ -13,7 +13,11 @@ export interface ProcessMiningResponse {
     graph: string;
     chart?: {
       type: string;
-      data: any;
+      data: {
+        x: any[];
+        y: number[];
+        labels: string[];
+      };
       schema_kg?: {
         nodes: any[];
         edges: any[];
