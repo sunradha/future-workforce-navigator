@@ -35,11 +35,18 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Create a container for the graph
     const g = svg.append("g");
 
-    // Create the graph simulation
+    // Create the graph simulation with adjusted parameters
     const simulation = d3.forceSimulation()
-      .force("link", d3.forceLink().id((d: any) => d.id).distance(150))
-      .force("charge", d3.forceManyBody().strength(-300))
-      .force("center", d3.forceCenter(containerWidth / 2, height / 2));
+      // Reduce link distance for tighter graph
+      .force("link", d3.forceLink().id((d: any) => d.id).distance(100))
+      // Decrease repulsion strength (was -300)
+      .force("charge", d3.forceManyBody().strength(-150))
+      // Add collision force to prevent overlap
+      .force("collide", d3.forceCollide().radius(30))
+      .force("center", d3.forceCenter(containerWidth / 2, height / 2))
+      // Add x and y forces to bring nodes toward center more strongly
+      .force("x", d3.forceX(containerWidth / 2).strength(0.05))
+      .force("y", d3.forceY(height / 2).strength(0.05));
 
     // Helper function to clean text by removing quotes
     const cleanText = (text: string) => {
@@ -99,6 +106,16 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     simulation.nodes(nodes as any).on("tick", ticked);
     (simulation.force("link") as d3.ForceLink<any, any>).links(edges);
+
+    // Increase alpha target for more heat in the simulation
+    simulation.alpha(1).alphaTarget(0.3).restart();
+    // Let simulation run longer with higher velocity decay
+    simulation.velocityDecay(0.1);
+    
+    // After some time, let the simulation cool down
+    setTimeout(() => {
+      simulation.alphaTarget(0);
+    }, 3000);
 
     function ticked() {
       link
