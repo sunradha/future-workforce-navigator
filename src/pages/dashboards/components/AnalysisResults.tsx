@@ -56,7 +56,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         {hasChartData && (
           <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
             <ChartCard
-              title={`Analysis Chart: ${results.result.chart.type || 'Data Visualization'}`}
+              title="Analysis Chart"
               subtitle="Visualized insights"
               type={results.result.chart.type === 'pie' ? 'pie' : 'bar'}
               data={results.result.chart.data}
