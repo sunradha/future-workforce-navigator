@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { getProcessMiningAnalysis, ProcessMiningResponse } from '@/services/ProcessMiningService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Brain } from 'lucide-react';
 import QuestionSelector from './components/QuestionSelector';
 import AnalysisResults from './components/AnalysisResults';
 
@@ -59,12 +59,13 @@ const ProcessMining = () => {
   };
 
   return (
-    <div className="grid gap-2">
-      <Card className="mb-2">
-        <CardHeader className="py-2">
-          <CardTitle className="text-lg">AI Analysis</CardTitle>
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader className="py-4 flex flex-row items-center gap-2">
+          <Brain className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">AI Knowledge Analysis</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-4">
           <QuestionSelector
             loading={loading}
             customQuestion={customQuestion}
@@ -81,8 +82,9 @@ const ProcessMining = () => {
       {results && <AnalysisResults results={results} visible={showResults} />}
 
       {loading && !results && (
-        <div className="flex items-center justify-center p-4">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="flex flex-col items-center justify-center p-8 bg-white dark:bg-gray-900 rounded-lg shadow-sm">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+          <p className="text-sm text-muted-foreground">Analyzing your question...</p>
         </div>
       )}
     </div>
