@@ -1,3 +1,4 @@
+import { Node, Edge } from '@/pages/dashboards/types/knowledgeGraphTypes';
 
 const API_BASE_URL = 'https://ox4-capstone-api.onrender.com';
 
@@ -24,16 +25,8 @@ export interface ProcessMiningResponse {
         edges: string[];
       };
       data_kg?: {
-        nodes: {
-          id: string;
-          label: string;
-          type: string;
-        }[];
-        edges: {
-          source: string;
-          target: string;
-          relationship: string;
-        }[];
+        nodes: Node[];
+        edges: Edge[];
       };
     };
   };

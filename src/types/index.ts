@@ -63,6 +63,9 @@ export type BudgetScenario = {
 
 export type DashboardTab = 'risk' | 'effectiveness' | 'prediction' | 'budget' | 'prioritization' | 'process-mining';
 
+// Re-export knowledge graph types for convenience
+export { Node, Edge } from '@/pages/dashboards/types/knowledgeGraphTypes';
+
 export interface ProcessMiningResponse {
   process_mining_result: string;
   knowledge_graph: string;

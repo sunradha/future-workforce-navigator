@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ProcessMiningResponse } from '@/services/ProcessMiningService';
 import AnalysisCard from './AnalysisCard';
