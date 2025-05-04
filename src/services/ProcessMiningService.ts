@@ -19,12 +19,20 @@ export interface ProcessMiningResponse {
         labels: string[];
       };
       schema_kg?: {
-        nodes: any[];
-        edges: any[];
+        nodes: string[];
+        edges: string[];
       };
       data_kg?: {
-        nodes: any[];
-        edges: any[];
+        nodes: {
+          id: string;
+          label: string;
+          type: string;
+        }[];
+        edges: {
+          source: string;
+          target: string;
+          relationship: string;
+        }[];
       };
     };
   };

@@ -5,6 +5,7 @@ import AnalysisCard from './AnalysisCard';
 import ProcessGraph from './ProcessGraph';
 import ChartCard from '@/components/ChartCard';
 import { Route } from 'lucide-react';
+import KnowledgeGraph from './KnowledgeGraph';
 
 interface AnalysisResultsProps {
   results: ProcessMiningResponse;
@@ -16,6 +17,10 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   
   // Check if there's chart data to display
   const hasChartData = results.result.chart && results.result.chart.data;
+  const hasKnowledgeGraph = results.result.chart && 
+    (results.result.chart.type === 'knowledge_graph') && 
+    results.result.chart.schema_kg && 
+    results.result.chart.data_kg;
 
   return (
     <div className="space-y-3 animate-fade-in">
@@ -53,7 +58,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
           </div>
         )}
         
-        {hasChartData && (
+        {hasChartData && !hasKnowledgeGraph && (
           <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
             <ChartCard
               title="Analysis Chart"
@@ -66,6 +71,32 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
           </div>
         )}
       </div>
+
+      {/* Knowledge Graph Visualization */}
+      {hasKnowledgeGraph && (
+        <div className="grid gap-3 md:grid-cols-2">
+          {/* Schema Knowledge Graph */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+            <KnowledgeGraph 
+              title="Conceptual Schema KG"
+              nodes={results.result.chart.schema_kg.nodes}
+              edges={results.result.chart.schema_kg.edges}
+              isSchema={true}
+              height={350}
+            />
+          </div>
+          
+          {/* Data Knowledge Graph */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+            <KnowledgeGraph 
+              title="Actual Data KG"
+              nodes={results.result.chart.data_kg.nodes}
+              edges={results.result.chart.data_kg.edges}
+              height={350}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
