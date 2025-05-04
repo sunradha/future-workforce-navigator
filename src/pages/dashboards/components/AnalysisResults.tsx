@@ -25,7 +25,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   console.log("Knowledge graph data:", hasKnowledgeGraph, results.result.chart?.schema_kg, results.result.chart?.data_kg);
 
   return (
-    <div className="space-y-3 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
         <AnalysisCard 
           title="Reasoning Type"
@@ -49,54 +49,57 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         />
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        {results.result.graph && !hasKnowledgeGraph && (
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
-            <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-              <Route className="h-4 w-4 text-blue-500" />
-              Process Graph
-            </h3>
-            <ProcessGraph graphData={results.result.graph} />
-          </div>
-        )}
-        
-        {hasChartData && !hasKnowledgeGraph && (
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
-            <ChartCard
-              title="Analysis Chart"
-              subtitle="Visualized insights"
-              type={results.result.chart.type === 'pie' ? 'pie' : 'bar'}
-              data={results.result.chart.data}
-              height={350}
-              className="w-full"
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Knowledge Graph Visualization */}
-      {hasKnowledgeGraph && (
+      {/* Standard charts */}
+      {!hasKnowledgeGraph && (
         <div className="grid gap-3 md:grid-cols-2">
+          {results.result.graph && (
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+              <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+                <Route className="h-4 w-4 text-blue-500" />
+                Process Graph
+              </h3>
+              <ProcessGraph graphData={results.result.graph} />
+            </div>
+          )}
+          
+          {hasChartData && (
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
+              <ChartCard
+                title="Analysis Chart"
+                subtitle="Visualized insights"
+                type={results.result.chart.type === 'pie' ? 'pie' : 'bar'}
+                data={results.result.chart.data}
+                height={350}
+                className="w-full"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Knowledge Graph Visualization - Stacked vertically */}
+      {hasKnowledgeGraph && (
+        <div className="space-y-4">
           {/* Schema Knowledge Graph */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+          {results.result.chart.schema_kg && (
             <KnowledgeGraph 
               title="Conceptual Schema KG"
               nodes={results.result.chart.schema_kg.nodes}
               edges={results.result.chart.schema_kg.edges}
               isSchema={true}
-              height={350}
+              height={450}
             />
-          </div>
+          )}
           
           {/* Data Knowledge Graph */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+          {results.result.chart.data_kg && (
             <KnowledgeGraph 
               title="Actual Data KG"
               nodes={results.result.chart.data_kg.nodes}
               edges={results.result.chart.data_kg.edges}
-              height={350}
+              height={450}
             />
-          </div>
+          )}
         </div>
       )}
     </div>

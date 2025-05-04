@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { ChartNetwork } from 'lucide-react';
+import { Network } from 'lucide-react';
 
 interface Node {
   id: string;
@@ -23,7 +23,7 @@ interface KnowledgeGraphProps {
   isSchema?: boolean;
 }
 
-const KnowledgeGraph = ({ title, nodes, edges, height = 350, isSchema = false }: KnowledgeGraphProps) => {
+const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }: KnowledgeGraphProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Process schema nodes and edges if they are in string format
@@ -60,16 +60,29 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 350, isSchema = false }:
     // Clear previous graph
     d3.select(svgRef.current).selectAll("*").remove();
 
-    const width = svgRef.current.clientWidth;
+    const containerWidth = svgRef.current.parentElement?.clientWidth || 800;
     const svg = d3.select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height);
+      .attr("width", containerWidth)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, containerWidth, height]);
+
+    // Add zoom capability
+    const zoom = d3.zoom()
+      .scaleExtent([0.5, 3])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      });
+
+    svg.call(zoom as any);
+    
+    // Create a container for the graph
+    const g = svg.append("g");
 
     // Create the graph simulation
     const simulation = d3.forceSimulation()
-      .force("link", d3.forceLink().id((d: any) => d.id).distance(100))
-      .force("charge", d3.forceManyBody().strength(-200))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("link", d3.forceLink().id((d: any) => d.id).distance(150))
+      .force("charge", d3.forceManyBody().strength(-300))
+      .force("center", d3.forceCenter(containerWidth / 2, height / 2));
 
     // Prepare the data - ensure we're working with objects, not strings
     const nodeData = processedNodes.map(node => ({...node}));
@@ -82,33 +95,37 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 350, isSchema = false }:
     }));
 
     // Add links (edges)
-    const link = svg.append("g")
+    const link = g.append("g")
       .selectAll("line")
       .data(linkData)
       .enter().append("line")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0.6)
-      .attr("stroke-width", 1);
+      .attr("stroke-width", 1.5);
 
     // Add link labels
-    const linkLabels = svg.append("g")
+    const linkLabels = g.append("g")
       .selectAll("text")
       .data(linkData)
       .enter().append("text")
       .text(d => d.relationship)
-      .attr("font-size", "8px")
+      .attr("font-size", "10px")
       .attr("text-anchor", "middle")
-      .attr("fill", "#777");
+      .attr("fill", "#777")
+      .attr("dy", "-5");
 
     // Color scale for node types
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    const color = d3.scaleOrdinal(d3.schemeSet2);
 
     // Add nodes
-    const node = svg.append("g")
-      .selectAll("circle")
+    const nodeGroup = g.append("g")
+      .selectAll("g")
       .data(nodeData)
-      .enter().append("circle")
-      .attr("r", 5)
+      .enter()
+      .append("g");
+
+    const node = nodeGroup.append("circle")
+      .attr("r", 10)  // Increased node size
       .attr("fill", (d: any) => color(d.type || "default"))
       .call(d3.drag()
         .on("start", dragstarted)
@@ -116,14 +133,12 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 350, isSchema = false }:
         .on("end", dragended) as any);
 
     // Add node labels
-    const nodeLabels = svg.append("g")
-      .selectAll("text")
-      .data(nodeData)
-      .enter().append("text")
+    const nodeLabels = nodeGroup.append("text")
       .text((d: any) => d.label)
-      .attr("font-size", "10px")
-      .attr("dx", 8)
-      .attr("dy", 3);
+      .attr("font-size", "12px")  // Increased font size
+      .attr("dx", 15)  // Position label to the right of the node
+      .attr("dy", 4)
+      .attr("fill", "#333");
 
     // Add tooltips for nodes
     node.append("title")
@@ -143,13 +158,8 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 350, isSchema = false }:
         .attr("x", (d: any) => (d.source.x + d.target.x) / 2)
         .attr("y", (d: any) => (d.source.y + d.target.y) / 2);
 
-      node
-        .attr("cx", (d: any) => d.x)
-        .attr("cy", (d: any) => d.y);
-
-      nodeLabels
-        .attr("x", (d: any) => d.x)
-        .attr("y", (d: any) => d.y);
+      nodeGroup
+        .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     }
 
     function dragstarted(event: any) {
@@ -169,19 +179,33 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 350, isSchema = false }:
       event.subject.fy = null;
     }
 
+    // Add a resize event listener
+    const handleResize = () => {
+      if (!svgRef.current) return;
+      
+      const newWidth = svgRef.current.parentElement?.clientWidth || 800;
+      svg.attr("width", newWidth);
+      svg.attr("viewBox", [0, 0, newWidth, height]);
+      simulation.force("center", d3.forceCenter(newWidth / 2, height / 2));
+      simulation.alpha(0.3).restart();
+    };
+
+    window.addEventListener("resize", handleResize);
+
     return () => {
       simulation.stop();
+      window.removeEventListener("resize", handleResize);
     };
   }, [processedNodes, validEdges, height, isSchema]);
 
   return (
-    <div className="w-full h-full">
-      <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-        <ChartNetwork className="h-4 w-4 text-purple-500" />
+    <div className="w-full h-full p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
+      <h3 className="text-base font-medium mb-3 flex items-center gap-2 text-purple-600">
+        <Network className="h-5 w-5" />
         {title}
       </h3>
-      <div className="w-full overflow-hidden border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
-        <svg ref={svgRef} className="w-full" style={{ minHeight: height }}></svg>
+      <div className="w-full overflow-hidden rounded-md bg-white" style={{ height: `${height}px` }}>
+        <svg ref={svgRef} className="w-full h-full"></svg>
       </div>
     </div>
   );
