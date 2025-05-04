@@ -18,59 +18,53 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   const hasChartData = results.result.chart && results.result.chart.data;
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="space-y-3 bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm">
+    <div className="space-y-3 animate-fade-in">
+      <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
         <AnalysisCard 
-          title="Reasoning Type:"
+          title="Reasoning Type"
           content={results.result.reasoning_justification}
           inline={true}
           type="reasoning"
         />
         
         <AnalysisCard 
-          title="Reasoning Path:"
+          title="Reasoning Path"
           content={results.result.reasoning_path || results.result.intent_justification}
           inline={true}
           type="path"
         />
 
         <AnalysisCard 
-          title="AI Answer:"
+          title="AI Answer"
           content={results.result.reasoning_answer}
           inline={true}
           type="answer"
         />
       </div>
 
-      {results.result.graph && (
-        <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm">
-          <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-            <Route className="h-5 w-5 text-blue-500" />
-            Process Graph
-          </h3>
-          <ProcessGraph graphData={results.result.graph} />
-        </div>
-      )}
-      
-      {hasChartData ? (
-        <div className="mt-4">
-          <ChartCard
-            title={`Analysis Chart: ${results.result.chart.type || 'Data Visualization'}`}
-            subtitle="Visualized insights from the analysis"
-            type={results.result.chart.type === 'pie' ? 'pie' : 'bar'}
-            data={results.result.chart.data}
-            height={350}
-          />
-        </div>
-      ) : results.result.chart ? (
-        <div className="mt-4">
-          <AnalysisCard 
-            title="Chart Info"
-            content={`Chart type: ${results.result.chart.type || 'Unknown'}`}
-            type="chart"
-          />
-        </div>
-      ) : null}
+      <div className="grid gap-3 md:grid-cols-2">
+        {results.result.graph && (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+            <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+              <Route className="h-4 w-4 text-blue-500" />
+              Process Graph
+            </h3>
+            <ProcessGraph graphData={results.result.graph} />
+          </div>
+        )}
+        
+        {hasChartData && (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+            <ChartCard
+              title={`Analysis Chart: ${results.result.chart.type || 'Data Visualization'}`}
+              subtitle="Visualized insights"
+              type={results.result.chart.type === 'pie' ? 'pie' : 'bar'}
+              data={results.result.chart.data}
+              height={300}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

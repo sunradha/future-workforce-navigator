@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Image as ImageIcon } from 'lucide-react';
 
 interface ProcessGraphProps {
   graphData: string;
@@ -9,19 +7,13 @@ interface ProcessGraphProps {
 
 const ProcessGraph = ({ graphData }: ProcessGraphProps) => {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-1 py-1">
-        <ImageIcon className="h-4 w-4" />
-        <CardTitle className="text-sm font-medium">Process Graph</CardTitle>
-      </CardHeader>
-      <CardContent className="py-1">
-        <img 
-          src={`data:image/png;base64,${graphData}`}
-          alt="Process Mining Graph"
-          className="max-w-full h-auto"
-        />
-      </CardContent>
-    </Card>
+    <div className="overflow-x-auto">
+      <img 
+        src={`data:image/png;base64,${graphData}`}
+        alt="Process Mining Graph"
+        className="max-w-full h-auto object-contain"
+      />
+    </div>
   );
 };
 
