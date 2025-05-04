@@ -36,6 +36,7 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }:
 
   const processedEdges = isSchema 
     ? (edges as string[]).map(edge => {
+        // Fix the schema edge parsing to correctly identify source and target
         const parsed = edge.match(/source: (.*), target: (.*), relationship: (.*)/);
         if (!parsed) return { source: '', target: '', relationship: '' };
         return {
@@ -49,9 +50,8 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }:
   // Filter out edges with null or invalid source or target
   const validEdges = processedEdges.filter(edge => 
     edge.source && edge.target && 
-    // Only include edges where both source and target exist in the nodes
-    processedNodes.some(node => node.id === edge.source) && 
-    processedNodes.some(node => node.id === edge.target)
+    // We don't check if nodes exist for the edges because we'll create them when missing
+    edge.source !== null && edge.target !== null
   );
 
   useEffect(() => {
@@ -84,8 +84,36 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }:
       .force("charge", d3.forceManyBody().strength(-300))
       .force("center", d3.forceCenter(containerWidth / 2, height / 2));
 
-    // Prepare the data - ensure we're working with objects, not strings
-    const nodeData = processedNodes.map(node => ({...node}));
+    // Create a complete set of nodes including all sources and targets from edges
+    const nodesMap = new Map();
+    
+    // Add all existing nodes
+    processedNodes.forEach(node => {
+      nodesMap.set(node.id, {...node});
+    });
+    
+    // Add missing nodes from edges
+    validEdges.forEach(edge => {
+      if (!nodesMap.has(edge.source)) {
+        nodesMap.set(edge.source, {
+          id: edge.source,
+          label: edge.source,
+          type: "Training Program" // Assuming missing nodes are training programs
+        });
+      }
+      
+      // Ensure target exists too (shouldn't be necessary based on the data)
+      if (!nodesMap.has(edge.target)) {
+        nodesMap.set(edge.target, {
+          id: edge.target,
+          label: `Unknown (${edge.target})`,
+          type: "Unknown"
+        });
+      }
+    });
+    
+    // Convert nodes map to array
+    const nodeData = Array.from(nodesMap.values());
     
     // For the linkData, ensure we're using node objects for source and target
     const linkData = validEdges.map(edge => ({

@@ -79,7 +79,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
 
       {/* Knowledge Graph Visualization - Stacked vertically */}
       {hasKnowledgeGraph && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Schema Knowledge Graph */}
           {results.result.chart.schema_kg && (
             <KnowledgeGraph 
@@ -97,7 +97,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
               title="Actual Data KG"
               nodes={results.result.chart.data_kg.nodes}
               edges={results.result.chart.data_kg.edges}
-              height={450}
+              height={550}
             />
           )}
         </div>
