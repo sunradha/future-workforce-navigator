@@ -14,22 +14,9 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <AnalysisCard 
-          title="Reasoning Type"
-          content={results.result.reasoning_type}
-          inline={true}
-        />
-        <AnalysisCard 
-          title="Intent"
-          content={results.result.intent}
-          inline={true}
-        />
-      </div>
-
       <div className="space-y-2">
         <AnalysisCard 
-          title="Reasoning Justification"
+          title="Reasoning Type"
           content={results.result.reasoning_justification}
         />
         <AnalysisCard 
