@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ProcessMiningResponse } from '@/services/ProcessMiningService';
 import AnalysisCard from './AnalysisCard';
@@ -50,9 +51,9 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
 
       {/* Standard charts */}
       {!hasKnowledgeGraph && (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 grid-cols-1">
           {results.result.graph && (
-            <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
                 <Route className="h-4 w-4 text-blue-500" />
                 Process Graph

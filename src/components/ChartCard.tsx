@@ -84,7 +84,10 @@ const ChartCard: React.FC<ChartCardProps> = ({
         <div style={{ width: '100%', height }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
             {type === 'bar' ? (
-              <RechartsBarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 35 }}>
+              <RechartsBarChart 
+                data={chartData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
+              >
                 <XAxis 
                   dataKey="name" 
                   angle={-35}
@@ -96,7 +99,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
                 <YAxis width={40} tick={{ fontSize: 10 }} />
                 <Tooltip contentStyle={{ fontSize: '12px' }} />
                 {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                <Bar dataKey="value" fill={colors[0]}>
+                <Bar dataKey="value" fill={colors[0]} maxBarSize={50}>
                   {chartData.map((entry: any, index: number) => (
                     <Cell 
                       key={`cell-${index}`} 
