@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { Network } from 'lucide-react';
-import { KnowledgeGraphProps } from '../types/knowledgeGraphTypes';
+import { KnowledgeGraphProps, Node, Edge } from '../types/knowledgeGraphTypes';
 import { 
   processSchemaNodes,
   processSchemaEdges,
@@ -16,11 +16,11 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }:
   // Process nodes and edges if they are in string format
   const processedNodes = isSchema 
     ? processSchemaNodes(nodes as string[])
-    : nodes;
+    : (nodes as Node[]);
 
   const processedEdges = isSchema 
     ? processSchemaEdges(edges as string[])
-    : edges;
+    : (edges as Edge[]);
 
   // Filter out invalid edges
   const validEdges = filterValidEdges(processedEdges);
