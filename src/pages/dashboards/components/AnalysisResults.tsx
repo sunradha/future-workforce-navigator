@@ -54,13 +54,14 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         )}
         
         {hasChartData && (
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
             <ChartCard
               title="Analysis Chart"
               subtitle="Visualized insights"
               type={results.result.chart.type === 'pie' ? 'pie' : 'bar'}
               data={results.result.chart.data}
-              height={300}
+              height={350}
+              className="w-full"
             />
           </div>
         )}

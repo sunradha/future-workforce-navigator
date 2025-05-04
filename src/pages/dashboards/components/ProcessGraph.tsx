@@ -7,11 +7,11 @@ interface ProcessGraphProps {
 
 const ProcessGraph = ({ graphData }: ProcessGraphProps) => {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto w-full">
       <img 
         src={`data:image/png;base64,${graphData}`}
         alt="Process Mining Graph"
-        className="max-w-full h-auto object-contain"
+        className="w-full h-auto object-contain"
       />
     </div>
   );

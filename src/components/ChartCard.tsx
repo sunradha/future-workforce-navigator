@@ -23,6 +23,7 @@ interface ChartCardProps {
   colors?: string[];
   showLegend?: boolean;
   height?: number;
+  className?: string;
 }
 
 const COLORS = ['#8B5CF6', '#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#6366f1'];
@@ -35,6 +36,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   colors = COLORS,
   showLegend = true,
   height = 300,
+  className = '',
 }) => {
   // Function to transform API chart data to the format expected by recharts
   const transformApiData = (apiData: any): ChartData => {
@@ -60,7 +62,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
 
   if (chartData.length === 0) {
     return (
-      <Card>
+      <Card className={className}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
           {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
@@ -73,13 +75,13 @@ const ChartCard: React.FC<ChartCardProps> = ({
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden ${className}`}>
       <CardHeader className="pb-2 px-3 py-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </CardHeader>
-      <CardContent className="p-0">
-        <div style={{ width: '100%', height }}>
+      <CardContent className="p-0 w-full">
+        <div style={{ width: '100%', height }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
             {type === 'bar' ? (
               <RechartsBarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 35 }}>
