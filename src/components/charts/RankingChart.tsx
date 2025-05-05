@@ -7,7 +7,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
   LabelList,
 } from 'recharts';
 
@@ -39,7 +38,7 @@ const RankingChart: React.FC<RankingChartProps> = ({
       return (
         <div className="bg-white p-2 border border-gray-200 shadow-md rounded text-xs">
           <p className="font-semibold">{payload[0].payload.name}</p>
-          <p>{`Count: ${payload[0].value}`}</p>
+          <p>{`Value: ${payload[0].value}`}</p>
         </div>
       );
     }
@@ -52,6 +51,7 @@ const RankingChart: React.FC<RankingChartProps> = ({
         data={data}
         layout="vertical"
         margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+        barSize={20}
       >
         <XAxis 
           type="number" 
@@ -61,19 +61,23 @@ const RankingChart: React.FC<RankingChartProps> = ({
         <YAxis 
           type="category" 
           dataKey="name" 
-          width={150}
-          tick={{ fontSize: 11 }}
+          width={120}
+          tick={{ fontSize: 12 }}
+          axisLine={false}
+          tickLine={false}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar 
           dataKey="value" 
           fill={barColor}
           background={{ fill: '#f3f4f6' }}
+          radius={[0, 0, 0, 0]}
         >
           <LabelList 
             dataKey="value" 
             position="right" 
-            style={{ fill: "#333", fontSize: 11, fontWeight: 500 }}
+            style={{ fill: "#333", fontSize: 12, fontWeight: 500 }}
+            formatter={(value: number) => value.toFixed(2)}
           />
         </Bar>
       </BarChart>
