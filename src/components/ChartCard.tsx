@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -135,7 +136,6 @@ const ChartCard: React.FC<ChartCardProps> = ({
   // Format percentage values for ranking chart
   const formatPercentage = (value: number): string => {
     // For ranking chart, we multiply by a factor of 100 for display
-    // We need to divide by 100 to get back to the original percentage
     if (type === 'ranking') {
       // Convert back to decimal form (0-1) and format as percentage
       const percentage = value / 100;
@@ -145,7 +145,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
         return `${(percentage * 100).toFixed(3)}%`;
       }
       
-      return `${(percentage * 100).toFixed(0)}%`;
+      return `${(percentage * 100).toFixed(1)}%`;
     }
     return `${value.toFixed(0)}%`;
   };
@@ -153,8 +153,8 @@ const ChartCard: React.FC<ChartCardProps> = ({
   // Calculate the appropriate left margin for ranking charts to accommodate labels
   const getMargin = () => {
     if (type === 'ranking') {
-      // More left margin for job titles but keep the graph position to the left
-      return { top: 5, right: 30, left: 170, bottom: 5 };
+      // Reduced left margin to pull chart more to the left, accept some truncation
+      return { top: 5, right: 30, left: 120, bottom: 5 };
     } else if (type === 'comparative_bar') {
       return { top: 10, right: 30, left: 0, bottom: 100 }; // More bottom margin for rotated labels
     }
@@ -217,14 +217,17 @@ const ChartCard: React.FC<ChartCardProps> = ({
                   domain={[0, 'dataMax']}
                   tickFormatter={formatPercentage}
                   tick={{ fontSize: 10 }}
-                  // Add more ticks to show better percentage distribution
                   ticks={[0, 20, 40, 60, 80, 100]}
                 />
                 <YAxis 
                   dataKey="name"
                   type="category"
-                  width={165} 
+                  width={120} 
                   tick={{ fontSize: 10 }}
+                  tickFormatter={(value) => {
+                    // Truncate long labels
+                    return value.length > 18 ? value.substring(0, 18) + '...' : value;
+                  }}
                 />
                 <Tooltip 
                   formatter={(value, name, props) => {
@@ -242,6 +245,8 @@ const ChartCard: React.FC<ChartCardProps> = ({
                   fill="#8B5CF6" 
                   name="Automation Risk"
                   maxBarSize={20}
+                  animationDuration={0} // Disable animation to avoid empty bars initially
+                  isAnimationActive={false}
                 >
                   {chartData.map((entry: any, index: number) => (
                     <Cell 
