@@ -19,6 +19,8 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
 
   // Process the nodes and edges to ensure they have proper string values
   const processNodes = (nodes: any[]) => {
+    if (!Array.isArray(nodes)) return [];
+    
     return nodes.map(node => ({
       ...node,
       id: String(node.id),
@@ -28,6 +30,8 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
   };
 
   const processEdges = (edges: any[]) => {
+    if (!Array.isArray(edges)) return [];
+    
     return edges.map(edge => ({
       ...edge,
       source: String(edge.source),
@@ -37,10 +41,18 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
   };
 
   const chartData = results.result.chart.data;
-  const nodes = chartData.nodes ? processNodes(chartData.nodes) : [];
-  const edges = chartData.edges ? processEdges(chartData.edges) : [];
+  const nodes = chartData && chartData.nodes ? processNodes(chartData.nodes) : [];
+  const edges = chartData && chartData.edges ? processEdges(chartData.edges) : [];
   
   console.log("Processed graph data:", { nodes, edges });
+  
+  // Validate that we have valid nodes and edges
+  const validGraph = nodes.length > 0 && edges.length > 0;
+  
+  if (!validGraph) {
+    console.error("Invalid graph data:", { nodes, edges });
+    return null;
+  }
 
   return (
     <div className="space-y-6">

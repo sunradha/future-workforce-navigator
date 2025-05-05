@@ -79,8 +79,9 @@ export const createCompleteNodeSet = (nodes: Node[], edges: Edge[]): Node[] => {
           node.label : 
           (typeof node.id === 'string' ? node.id : String(node.id));
         
-        nodesMap.set(node.id, {
+        nodesMap.set(String(node.id), {
           ...node,
+          id: String(node.id),
           label: label || String(node.id)
         });
       }
@@ -88,17 +89,17 @@ export const createCompleteNodeSet = (nodes: Node[], edges: Edge[]): Node[] => {
     
     // Add missing nodes from edges
     edges.forEach(edge => {
-      if (edge.source && !nodesMap.has(edge.source)) {
-        nodesMap.set(edge.source, {
-          id: edge.source,
+      if (edge.source && !nodesMap.has(String(edge.source))) {
+        nodesMap.set(String(edge.source), {
+          id: String(edge.source),
           label: String(edge.source),
           type: "Entity"
         });
       }
       
-      if (edge.target && !nodesMap.has(edge.target)) {
-        nodesMap.set(edge.target, {
-          id: edge.target,
+      if (edge.target && !nodesMap.has(String(edge.target))) {
+        nodesMap.set(String(edge.target), {
+          id: String(edge.target),
           label: String(edge.target),
           type: "Entity"
         });
@@ -110,4 +111,32 @@ export const createCompleteNodeSet = (nodes: Node[], edges: Edge[]): Node[] => {
     console.error("Error creating complete node set:", error);
     return nodes;
   }
+};
+
+/**
+ * Verify that edges connect to existing nodes
+ */
+export const validateEdges = (edges: Edge[], nodes: Node[]): Edge[] => {
+  if (!edges || !Array.isArray(edges) || !nodes || !Array.isArray(nodes)) {
+    console.error("Invalid edges or nodes:", { edges, nodes });
+    return [];
+  }
+  
+  // Create a set of node IDs for fast lookup
+  const nodeIds = new Set(nodes.map(node => String(node.id)));
+  
+  // Filter edges to only include those with source and target in our nodes
+  const validEdges = edges.filter(edge => {
+    const sourceId = String(edge.source);
+    const targetId = String(edge.target);
+    
+    if (!nodeIds.has(sourceId) || !nodeIds.has(targetId)) {
+      console.warn(`Edge with invalid node references: ${sourceId} -> ${targetId}`);
+      return false;
+    }
+    
+    return true;
+  });
+  
+  return validEdges;
 };

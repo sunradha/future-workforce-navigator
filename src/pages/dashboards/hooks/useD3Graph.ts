@@ -1,4 +1,3 @@
-
 import { useEffect, RefObject } from 'react';
 import * as d3 from 'd3';
 import { Node, Edge } from '../types/knowledgeGraphTypes';
@@ -12,9 +11,18 @@ interface UseD3GraphProps {
 
 export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) => {
   useEffect(() => {
-    if (!svgRef.current || !nodes.length) return;
+    if (!svgRef.current || !nodes.length || !edges.length) {
+      console.log("Missing required data for graph:", { 
+        svgRef: !!svgRef.current, 
+        nodesLength: nodes.length, 
+        edgesLength: edges.length 
+      });
+      return;
+    }
     
     console.log(`Rendering graph with ${nodes.length} nodes and ${edges.length} edges`);
+    console.log("Nodes:", nodes);
+    console.log("Edges:", edges);
     
     // Clear previous graph
     d3.select(svgRef.current).selectAll("*").remove();
@@ -37,30 +45,51 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Create a container for the graph
     const g = svg.append("g");
 
-    // Limit the number of nodes and edges to improve performance
-    const maxNodes = 50; // Limit to 50 nodes for performance
-    const limitedNodes = nodes.length > maxNodes 
-      ? nodes.slice(0, maxNodes) 
-      : nodes;
+    // Create a map for faster node lookup
+    const nodeMap = new Map(nodes.map(node => [node.id, node]));
     
-    // Filter edges to only include those connecting to our limited nodes
-    const nodeIds = new Set(limitedNodes.map(n => n.id));
-    const limitedEdges = edges.filter(e => 
-      nodeIds.has(e.source) && nodeIds.has(e.target)
+    // Validate edges to ensure they connect to existing nodes
+    const validEdges = edges.filter(edge => 
+      nodeMap.has(edge.source) && nodeMap.has(edge.target)
     );
     
-    if (nodes.length > maxNodes) {
-      console.log(`Limited graph to ${maxNodes} nodes out of ${nodes.length} for performance`);
+    if (validEdges.length === 0) {
+      console.error("No valid edges found - all edges reference non-existent nodes");
+      
+      // Draw unconnected nodes as fallback
+      g.selectAll("circle")
+        .data(nodes)
+        .enter()
+        .append("circle")
+        .attr("r", 20)
+        .attr("cx", (d, i) => 100 + (i * 150))
+        .attr("cy", height / 2)
+        .attr("fill", "#3b82f6")
+        .append("title")
+        .text(d => d.label);
+      
+      g.selectAll("text")
+        .data(nodes)
+        .enter()
+        .append("text")
+        .attr("x", (d, i) => 100 + (i * 150))
+        .attr("y", height / 2 + 40)
+        .attr("text-anchor", "middle")
+        .text(d => cleanText(d.label));
+      
+      return;
     }
 
-    // Create the graph simulation with optimized parameters
+    // Create the graph simulation with improved parameters for causal graphs
     const simulation = d3.forceSimulation()
-      .force("link", d3.forceLink().id((d: any) => d.id).distance(80))
-      .force("charge", d3.forceManyBody().strength(-120))
-      .force("collide", d3.forceCollide().radius(40).strength(1))
-      .force("center", d3.forceCenter(containerWidth / 2, height / 2))
-      .force("x", d3.forceX(containerWidth / 2).strength(0.1))
-      .force("y", d3.forceY(height / 2).strength(0.1));
+      .force("link", d3.forceLink()
+        .id((d: any) => d.id)
+        .distance(150) // Increased distance for causal graphs
+        .strength(1)
+      )
+      .force("charge", d3.forceManyBody().strength(-500)) // Stronger repulsion
+      .force("collide", d3.forceCollide().radius(80).strength(1))
+      .force("center", d3.forceCenter(containerWidth / 2, height / 2));
 
     // Helper function to safely clean and format text
     const cleanText = (text: any): string => {
@@ -95,84 +124,118 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       return String(text);
     };
 
-    // Add links (edges)
+    // Add links (edges) with arrows
     const link = g.append("g")
-      .selectAll("line")
-      .data(limitedEdges)
-      .enter().append("line")
+      .attr("class", "links")
+      .selectAll("path")
+      .data(validEdges)
+      .enter()
+      .append("path")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0.6)
-      .attr("stroke-width", 1.5);
+      .attr("stroke-width", 2)
+      .attr("fill", "none")
+      .attr("marker-end", "url(#arrow)");
+    
+    // Define arrow markers for directional links
+    svg.append("defs").selectAll("marker")
+      .data(["arrow"])
+      .enter()
+      .append("marker")
+      .attr("id", d => d)
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 25)  // Offset so that the arrow doesn't overlap the node
+      .attr("refY", 0)
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 6)
+      .attr("orient", "auto")
+      .append("path")
+      .attr("d", "M0,-5L10,0L0,5")
+      .attr("fill", "#999");
 
-    // Add link labels - only show for up to 30 edges to avoid clutter
-    const maxEdgeLabels = 30;
+    // Add edge labels - use all edges for causal graphs as they're important
     const linkLabels = g.append("g")
+      .attr("class", "link-labels")
       .selectAll("text")
-      .data(limitedEdges.slice(0, maxEdgeLabels))
-      .enter().append("text")
+      .data(validEdges)
+      .enter()
+      .append("text")
       .text(d => cleanText(d.relationship))
-      .attr("font-size", "10px")
+      .attr("font-size", "12px")
       .attr("text-anchor", "middle")
-      .attr("fill", "#777")
+      .attr("fill", "#555")
       .attr("dy", "-5");
 
     // Color scale for node types
-    const color = d3.scaleOrdinal(d3.schemeSet2);
+    const color = d3.scaleOrdinal()
+      .domain(["outcome", "factor", "intervention", "Entity"])
+      .range(["#ef4444", "#f59e0b", "#3b82f6", "#10b981"]);
 
-    // Add nodes
+    // Create node groups
     const nodeGroup = g.append("g")
+      .attr("class", "nodes")
       .selectAll("g")
-      .data(limitedNodes)
+      .data(nodes)
       .enter()
-      .append("g");
-
-    const node = nodeGroup.append("circle")
-      .attr("r", 10)
-      .attr("fill", (d: any) => {
-        // Handle possible undefined type
-        const nodeType = cleanText(d.type) || "default";
-        return color(nodeType);
-      })
+      .append("g")
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended) as any);
 
+    // Add node circles
+    const node = nodeGroup.append("circle")
+      .attr("r", 20)
+      .attr("fill", (d: any) => {
+        // Get color based on node type
+        const nodeType = cleanText(d.type) || "Entity";
+        return color(nodeType);
+      })
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 2);
+
     // Add node labels
     const nodeLabels = nodeGroup.append("text")
       .text((d: any) => cleanText(d.label))
       .attr("font-size", "12px")
-      .attr("dx", 15)
-      .attr("dy", 4)
+      .attr("font-weight", "bold")
+      .attr("dx", 0)
+      .attr("dy", 30)
+      .attr("text-anchor", "middle")
       .attr("fill", "#333");
 
     // Add tooltips for nodes
     node.append("title")
       .text((d: any) => `${cleanText(d.label)} (${cleanText(d.type) || "Unknown Type"})`);
 
-    simulation.nodes(limitedNodes as any).on("tick", ticked);
-    (simulation.force("link") as d3.ForceLink<any, any>).links(limitedEdges);
+    simulation.nodes(nodes as any).on("tick", ticked);
+    (simulation.force("link") as d3.ForceLink<any, any>).links(validEdges);
 
-    // Set a faster simulation that cools down quickly
-    simulation.alpha(0.8).alphaTarget(0).alphaDecay(0.05).velocityDecay(0.2);
-    
-    // Stop simulation after 2 seconds to prevent CPU strain
-    setTimeout(() => {
-      simulation.stop();
-      console.log('Stopped simulation to save resources');
-    }, 2000);
+    // Run the simulation with higher alpha for better initial layout
+    simulation.alpha(1).restart();
 
     function ticked() {
-      link
-        .attr("x1", (d: any) => d.source.x)
-        .attr("y1", (d: any) => d.source.y)
-        .attr("x2", (d: any) => d.target.x)
-        .attr("y2", (d: any) => d.target.y);
+      // Update link paths for curved edges
+      link.attr("d", (d: any) => {
+        const dx = d.target.x - d.source.x;
+        const dy = d.target.y - d.source.y;
+        const dr = Math.sqrt(dx * dx + dy * dy);
+        
+        // Direct path for self-loops
+        if (d.source === d.target) {
+          return `M${d.source.x},${d.source.y} A1,1 0 0,1 ${d.target.x},${d.target.y}`;
+        }
+        
+        // Curved path for normal links
+        return `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+      });
 
+      // Update link label positions
       linkLabels
         .attr("x", (d: any) => (d.source.x + d.target.x) / 2)
         .attr("y", (d: any) => (d.source.y + d.target.y) / 2);
 
+      // Update node group positions
       nodeGroup
         .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     }
@@ -190,8 +253,11 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     function dragended(event: any) {
       if (!event.active) simulation.alphaTarget(0);
-      event.subject.fx = null;
-      event.subject.fy = null;
+      
+      // Keep nodes in fixed positions after drag for causal graphs
+      // This makes the graph more stable
+      // event.subject.fx = null;
+      // event.subject.fy = null;
     }
 
     // Add a resize event listener
@@ -206,6 +272,13 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     };
 
     window.addEventListener("resize", handleResize);
+
+    // Stop simulation after 3 seconds to save resources, 
+    // but leave it running longer initially for better layout
+    setTimeout(() => {
+      simulation.stop();
+      console.log('Stopped simulation to save resources');
+    }, 3000);
 
     return () => {
       simulation.stop();
