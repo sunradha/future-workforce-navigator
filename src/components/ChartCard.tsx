@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -19,7 +20,7 @@ import { ChartData, BarData } from '@/types';
 interface ChartCardProps {
   title: string;
   subtitle?: string;
-  type: 'bar' | 'pie' | 'time_series' | 'ranking';
+  type: 'bar' | 'pie' | 'time_series' | 'ranking' | 'comparative_bar';
   data: ChartData | BarData | any; // Allow for API response format
   colors?: string[];
   showLegend?: boolean;
@@ -44,6 +45,27 @@ const ChartCard: React.FC<ChartCardProps> = ({
     // If data is already in the expected format, return it
     if (Array.isArray(apiData)) {
       return apiData;
+    }
+
+    // Handle comparative_bar chart data format (categories and series)
+    if (apiData && apiData.categories && apiData.series && type === 'comparative_bar') {
+      // Filter out null values and transform the data
+      return apiData.categories
+        .map((category: string, index: number) => {
+          if (!category) return null; // Skip null categories
+          
+          const item: any = { name: category };
+          
+          // Add data from each series
+          apiData.series.forEach((series: any) => {
+            if (series.name && series.data && index < series.data.length) {
+              item[series.name] = series.data[index];
+            }
+          });
+          
+          return item;
+        })
+        .filter(Boolean); // Remove null entries
     }
 
     // Handle ranking chart data format (labels and y arrays)
@@ -121,6 +143,8 @@ const ChartCard: React.FC<ChartCardProps> = ({
     if (type === 'ranking') {
       // More left margin for job titles but keep the graph position to the left
       return { top: 5, right: 30, left: 170, bottom: 5 };
+    } else if (type === 'comparative_bar') {
+      return { top: 10, right: 30, left: 0, bottom: 100 }; // More bottom margin for rotated labels
     }
     return { top: 10, right: 10, left: 0, bottom: 35 };
   };
@@ -211,6 +235,37 @@ const ChartCard: React.FC<ChartCardProps> = ({
                     />
                   ))}
                 </Bar>
+              </RechartsBarChart>
+            ) : type === 'comparative_bar' ? (
+              <RechartsBarChart 
+                data={chartData}
+                margin={getMargin()}
+                layout="vertical"
+                barGap={5}
+              >
+                <XAxis 
+                  type="number" 
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={formatYAxisTick}
+                />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={140}
+                  tick={{ fontSize: 10 }}
+                />
+                <Tooltip contentStyle={{ fontSize: '12px' }} />
+                {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
+                {/* Dynamically render bars for each series */}
+                {data.series && Array.isArray(data.series) && data.series.map((series: any, index: number) => (
+                  <Bar 
+                    key={`series-${index}`}
+                    dataKey={series.name} 
+                    fill={colors[index % colors.length]} 
+                    name={series.name}
+                    maxBarSize={30}
+                  />
+                ))}
               </RechartsBarChart>
             ) : type === 'time_series' ? (
               <LineChart
