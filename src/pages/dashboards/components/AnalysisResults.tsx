@@ -16,20 +16,24 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   if (!results?.result || !visible) return null;
   
   // Check if there's chart data to display
-  const hasChartData = results.result.chart && results.result.chart.data;
+  const hasStandardChartData = results.result.chart && 
+    results.result.chart.data &&
+    !['knowledge_graph', 'causal_graph'].includes(results.result.chart.type || '');
+  
+  // Check if there's knowledge graph data
   const hasKnowledgeGraph = results.result.chart && 
-    (results.result.chart.type === 'knowledge_graph') && 
-    results.result.chart.schema_kg && 
-    results.result.chart.data_kg;
+    ['knowledge_graph', 'causal_graph'].includes(results.result.chart.type || '') && 
+    results.result.chart.data;
 
-  console.log("Knowledge graph data:", hasKnowledgeGraph, results.result.chart?.schema_kg, results.result.chart?.data_kg);
+  console.log("Chart type:", results.result.chart?.type);
+  console.log("Knowledge graph data:", hasKnowledgeGraph, results.result.chart?.data);
 
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
         <AnalysisCard 
           title="Reasoning Type"
-          content={results.result.reasoning_justification}
+          content={results.result.reasoning_justification || results.result.reasoning_type}
           inline={true}
           type="reasoning"
         />
@@ -49,7 +53,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         />
       </div>
 
-      {/* Standard charts */}
+      {/* Standard charts (bar, pie) */}
       {!hasKnowledgeGraph && (
         <div className="grid gap-3 grid-cols-1">
           {results.result.graph && (
@@ -62,7 +66,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
             </div>
           )}
           
-          {hasChartData && (
+          {hasStandardChartData && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <ChartCard
                 title="Analysis Chart"
@@ -77,29 +81,16 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         </div>
       )}
 
-      {/* Knowledge Graph Visualization - Stacked vertically */}
+      {/* Knowledge Graph or Causal Graph Visualization */}
       {hasKnowledgeGraph && (
         <div className="space-y-6">
-          {/* Schema Knowledge Graph */}
-          {results.result.chart.schema_kg && (
-            <KnowledgeGraph 
-              title="Conceptual Schema KG"
-              nodes={results.result.chart.schema_kg.nodes}
-              edges={results.result.chart.schema_kg.edges}
-              isSchema={true}
-              height={450}
-            />
-          )}
-          
-          {/* Data Knowledge Graph */}
-          {results.result.chart.data_kg && (
-            <KnowledgeGraph 
-              title="Actual Data KG"
-              nodes={results.result.chart.data_kg.nodes}
-              edges={results.result.chart.data_kg.edges}
-              height={550}
-            />
-          )}
+          {/* Single graph visualization */}
+          <KnowledgeGraph 
+            title={results.result.chart.type === 'knowledge_graph' ? 'Knowledge Graph' : 'Causal Graph'}
+            nodes={results.result.chart.data.nodes}
+            edges={results.result.chart.data.edges}
+            height={550}
+          />
         </div>
       )}
     </div>

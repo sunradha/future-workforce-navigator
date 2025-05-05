@@ -80,17 +80,17 @@ export type Database = {
       }
       dim_industry: {
         Row: {
-          industry_code: number | null
+          industry_code: number
           industry_name: string | null
           sector: string | null
         }
         Insert: {
-          industry_code?: number | null
+          industry_code: number
           industry_name?: string | null
           sector?: string | null
         }
         Update: {
-          industry_code?: number | null
+          industry_code?: number
           industry_name?: string | null
           sector?: string | null
         }
@@ -118,14 +118,20 @@ export type Database = {
         Row: {
           local_authority_code: string
           local_authority_name: string | null
+          region_id: number | null
+          region_name: string | null
         }
         Insert: {
           local_authority_code: string
           local_authority_name?: string | null
+          region_id?: number | null
+          region_name?: string | null
         }
         Update: {
           local_authority_code?: string
           local_authority_name?: string | null
+          region_id?: number | null
+          region_name?: string | null
         }
         Relationships: []
       }

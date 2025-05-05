@@ -1,3 +1,4 @@
+
 import { Node, Edge } from '@/pages/dashboards/types/knowledgeGraphTypes';
 
 const API_BASE_URL = 'https://ox4-capstone-api.onrender.com';
@@ -6,19 +7,21 @@ export interface ProcessMiningResponse {
   status: string;
   result: {
     reasoning_type: string;
-    reasoning_justification: string;
+    reasoning_justification?: string;
     reasoning_path?: string;
     intent?: string;
     intent_justification?: string;
     reasoning_answer: string;
     visualization_type?: string;
-    graph: string;
+    graph?: string;
     chart?: {
       type: string;
       data?: {
-        x: any[];
-        y: number[];
-        labels: string[];
+        x?: any[];
+        y?: number[];
+        labels?: string[];
+        nodes?: Node[];
+        edges?: Edge[];
       };
       schema_kg?: {
         nodes: string[];
@@ -29,6 +32,7 @@ export interface ProcessMiningResponse {
         edges: Edge[];
       };
     };
+    error?: string | null;
   };
 }
 
