@@ -37,10 +37,14 @@ export const transformApiData = (apiData: any, chartType: string): any[] => {
 
   // Handle ranking chart data format (labels and y arrays)
   if (apiData && apiData.labels && apiData.y && chartType === 'ranking') {
-    return apiData.labels.map((label: string, index: number) => ({
-      name: label || `Item ${index + 1}`,
-      value: apiData.y[index] || 0,
-    })).filter((item: any) => item.name !== 'null');
+    console.log('Transforming ranking data:', apiData);
+    // For ranking charts, transform and sort by value (descending)
+    return apiData.labels
+      .map((label: string, index: number) => ({
+        name: label || `Item ${index + 1}`,
+        value: apiData.y[index] || 0,
+      }))
+      .filter((item: any) => item.name && item.name !== 'null');
   }
 
   // Handle time series data format

@@ -7,6 +7,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  Cell,
+  LabelList,
 } from 'recharts';
 
 interface RankingChartProps {
@@ -15,18 +17,21 @@ interface RankingChartProps {
     value: number;
   }>;
   height?: number;
+  barColor?: string;
 }
 
-const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
-  // Transform the data to ensure values are properly displayed
-  const transformedData = data.map(item => ({
-    name: item.name,
-    value: typeof item.value === 'number' 
-      ? (item.value < 1 ? Math.round(item.value * 100) : item.value)
-      : 0
-  }));
+const RankingChart: React.FC<RankingChartProps> = ({ 
+  data, 
+  height = 350, 
+  barColor = "#8B5CF6" 
+}) => {
+  // Make sure we have data and sort it by value (ascending for better visibility)
+  if (!data || data.length === 0) {
+    console.warn('RankingChart received no data');
+    return <div className="h-40 flex items-center justify-center">No data available</div>;
+  }
 
-  console.log('RankingChart rendering with transformedData:', transformedData);
+  console.log('RankingChart rendering with data:', data);
 
   // Custom tooltip component
   const CustomTooltip = ({ active, payload }: any) => {
@@ -44,27 +49,33 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
-        data={transformedData}
-        layout="horizontal"
-        margin={{ top: 5, right: 20, left: 80, bottom: 5 }}
-        barSize={20}
+        data={data}
+        layout="vertical"
+        margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
       >
         <XAxis 
           type="number" 
-          domain={[0, 'dataMax']} 
+          domain={[0, 'dataMax']}
+          tickFormatter={(value) => value.toString()}
         />
         <YAxis 
           type="category" 
           dataKey="name" 
-          width={80}
-          tick={{ fontSize: 10 }}
+          width={150}
+          tick={{ fontSize: 11 }}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar 
           dataKey="value" 
-          fill="#8B5CF6"
+          fill={barColor}
           background={{ fill: '#f3f4f6' }}
-        />
+        >
+          <LabelList 
+            dataKey="value" 
+            position="right" 
+            style={{ fill: "#333", fontSize: 11, fontWeight: 500 }}
+          />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );

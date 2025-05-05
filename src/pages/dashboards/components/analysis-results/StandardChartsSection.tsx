@@ -43,6 +43,31 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
   console.log("Chart data type:", results.result.chart?.type);
   console.log("Chart data:", results.result.chart?.data);
 
+  // Determine title and subtitle based on chart type or query content
+  const getRankingChartTitle = () => {
+    const query = results.process_mining_result?.toLowerCase() || '';
+    
+    if (query.includes('automation risk') || query.includes('risk of automation')) {
+      return {
+        title: "Automation Risk by Occupation",
+        subtitle: "Occupations ranked by automation probability"
+      };
+    }
+    
+    if (query.includes('skill categories') && query.includes('difficulty')) {
+      return {
+        title: "Skill Categories with High-Difficulty Programs",
+        subtitle: "Categories ranked by number of difficult training programs"
+      };
+    }
+    
+    // Default title
+    return {
+      title: "Ranking Analysis",
+      subtitle: "Items ranked by value"
+    };
+  };
+
   return (
     <div className="grid gap-3 grid-cols-1">
       {/* Process Graph */}
@@ -88,8 +113,8 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
       {hasRankingChart && (
         <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
           <ChartCard
-            title="Skill Categories with High-Difficulty Programs"
-            subtitle="Categories ranked by number of difficult training programs"
+            title={getRankingChartTitle().title}
+            subtitle={getRankingChartTitle().subtitle}
             type="ranking"
             data={results.result.chart.data}
             height={550}
