@@ -50,18 +50,19 @@ const RankingChart: React.FC<RankingChartProps> = ({
       <BarChart
         data={data}
         layout="vertical"
-        margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+        margin={{ top: 5, right: 40, left: 140, bottom: 5 }}
         barSize={20}
       >
         <XAxis 
           type="number" 
-          domain={[0, 'dataMax']}
+          domain={[0, 1]}
           tickFormatter={(value) => value.toString()}
+          tickCount={6}
         />
         <YAxis 
           type="category" 
           dataKey="name" 
-          width={120}
+          width={140}
           tick={{ fontSize: 12 }}
           axisLine={false}
           tickLine={false}
