@@ -1,3 +1,4 @@
+
 import { useEffect, RefObject } from 'react';
 import * as d3 from 'd3';
 import { Node, Edge } from '../types/knowledgeGraphTypes';
@@ -66,7 +67,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .attr("cy", height / 2)
         .attr("fill", "#3b82f6")
         .append("title")
-        .text(d => d.label);
+        .text(d => cleanText(d.label));
       
       g.selectAll("text")
         .data(nodes)
@@ -167,7 +168,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("dy", "-5");
 
     // Color scale for node types
-    const color = d3.scaleOrdinal()
+    const color = d3.scaleOrdinal<string>()
       .domain(["outcome", "factor", "intervention", "Entity"])
       .range(["#ef4444", "#f59e0b", "#3b82f6", "#10b981"]);
 
@@ -187,8 +188,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     const node = nodeGroup.append("circle")
       .attr("r", 20)
       .attr("fill", (d: any) => {
-        // Get color based on node type
-        const nodeType = cleanText(d.type) || "Entity";
+        // Get color based on node type, with proper type casting
+        const nodeType = d.type ? cleanText(d.type) : "Entity";
         return color(nodeType);
       })
       .attr("stroke", "#fff")
