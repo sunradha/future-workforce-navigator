@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -8,21 +7,16 @@ import QuestionSelector from './components/QuestionSelector';
 import AnalysisResults from './components/AnalysisResults';
 
 const questions = [
-  "What are the most common training paths?",
-  "Where are the biggest bottlenecks in the training process?",
-  "Which training sequences lead to the highest certification rates?",
-  "What are the average time intervals between training activities?",
-  "What process improvements would you recommend based on this analysis?",
-  "What patterns exist between job automation risk and training program selection?",
-  "Which employee characteristics correlate with successful certification?",
-  "What are the implicit relationships between job roles and successful training outcomes?",
-  "How does the knowledge graph reveal hidden connections in the workforce reskilling ecosystem?",
-  "What personalized training recommendations would you make based on this knowledge graph analysis?",
-  "Does high automation risk cause lower training completion rates?",
-  "What is the causal effect of training program type on certification outcomes?",
-  "What would happen if employees in high-risk jobs were assigned different training programs?",
-  "How would a 30% reduction in available training affect overall certification rates?",
-  "What interventions would have the highest causal impact on successful reskilling?"
+  "How training budgets have varied over the years and any correlation with increase or decrease in the training budget?",
+  "Which job roles across sectors are at maximum risk of automation?",
+  "What are the local authorities in England that are at higher risk of job automation than other places in England?",
+  "Which training programs were deemed more successful or effective than others and Why?",
+  "Which training programs were having high level of difficulty or perceived difficulty by employees?",
+  "Which skills needs prioritization to improve the skill levels of employees to perform their job most across different sectors?",
+  "Evaluate the performance of all training programs conducted in the last one year?",
+  "Which training programs were having high level of difficulty or perceived difficulty by employees?",
+  "Which skill categories lead to the most high-difficulty programs?",
+  "Which employees struggled across multiple programs?"
 ];
 
 const ProcessMining = () => {
