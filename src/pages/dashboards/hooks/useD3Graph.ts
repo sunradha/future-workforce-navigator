@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import * as d3 from 'd3';
 import { UseD3GraphProps } from './graph/types';
 import { useGraphSetup } from './graph/useGraphSetup';
 import { useGraphSimulation } from './graph/useGraphSimulation';

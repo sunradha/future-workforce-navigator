@@ -1,5 +1,14 @@
+
 import * as d3 from 'd3';
 import { Node } from '../../types/knowledgeGraphTypes';
+
+// Interface for drag event subject with fixed position attributes
+interface DragSubject extends d3.SimulationNodeDatum {
+  x: number;
+  y: number;
+  fx: number | null;
+  fy: number | null;
+}
 
 export const useNodeRenderer = (
   g: d3.Selection<SVGGElement, unknown, null, undefined>,
@@ -19,7 +28,7 @@ export const useNodeRenderer = (
     .data(nodes)
     .enter()
     .append("g")
-    .call(d3.drag()
+    .call(d3.drag<SVGGElement, Node>()
       .on("start", (event) => dragstarted(event, simulation))
       .on("drag", (event) => dragged(event))
       .on("end", (event) => dragended(event, simulation)) as any);
@@ -52,9 +61,9 @@ export const useNodeRenderer = (
   return { nodeGroup, node, nodeLabels };
 };
 
-// Drag functions
+// Drag functions with proper TypeScript types
 export const dragstarted = (
-  event: d3.D3DragEvent<Element, unknown, unknown>,
+  event: d3.D3DragEvent<SVGGElement, Node, DragSubject>,
   simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>
 ) => {
   if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -62,13 +71,15 @@ export const dragstarted = (
   event.subject.fy = event.subject.y;
 };
 
-export const dragged = (event: d3.D3DragEvent<Element, unknown, unknown>) => {
+export const dragged = (
+  event: d3.D3DragEvent<SVGGElement, Node, DragSubject>
+) => {
   event.subject.fx = event.x;
   event.subject.fy = event.y;
 };
 
 export const dragended = (
-  event: d3.D3DragEvent<Element, unknown, unknown>,
+  event: d3.D3DragEvent<SVGGElement, Node, DragSubject>,
   simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>
 ) => {
   if (!event.active) simulation.alphaTarget(0);
