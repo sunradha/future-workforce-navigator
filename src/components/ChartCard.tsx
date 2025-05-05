@@ -108,6 +108,15 @@ const ChartCard: React.FC<ChartCardProps> = ({
     return `${(value * 100).toFixed(0)}%`;
   };
 
+  // Calculate the appropriate left margin for ranking charts to accommodate labels
+  const getMargin = () => {
+    if (type === 'ranking') {
+      // More left margin for job titles
+      return { top: 5, right: 30, left: 200, bottom: 5 };
+    }
+    return { top: 10, right: 10, left: 0, bottom: 35 };
+  };
+
   console.log("ChartCard rendering with type:", type, "and data:", chartData);
 
   return (
@@ -119,58 +128,73 @@ const ChartCard: React.FC<ChartCardProps> = ({
       <CardContent className="p-0 w-full">
         <div style={{ width: '100%', height }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-            {type === 'bar' || type === 'ranking' ? (
+            {type === 'bar' ? (
               <RechartsBarChart 
                 data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
-                layout={type === 'ranking' ? 'horizontal' : 'vertical'}
+                layout="vertical"
               >
-                {type === 'ranking' ? (
-                  <>
-                    <XAxis 
-                      type="number"
-                      tickFormatter={formatPercentage}
-                      tick={{ fontSize: 10 }}
-                    />
-                    <YAxis 
-                      type="category"
-                      dataKey="name"
-                      width={150}
-                      tick={{ fontSize: 10 }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <XAxis 
-                      dataKey="name" 
-                      angle={-35}
-                      textAnchor="end"
-                      height={60}
-                      tick={{ fontSize: 10 }}
-                      tickMargin={8}
-                    />
-                    <YAxis 
-                      width={40} 
-                      tick={{ fontSize: 10 }}
-                      tickFormatter={formatYAxisTick}
-                    />
-                  </>
-                )}
-                <Tooltip 
-                  contentStyle={{ fontSize: '12px' }}
-                  formatter={type === 'ranking' ? formatPercentage : undefined}
+                <XAxis 
+                  type="number"
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={formatYAxisTick}
                 />
+                <YAxis 
+                  dataKey="name" 
+                  type="category"
+                  width={120}
+                  tick={{ fontSize: 10 }}
+                />
+                <Tooltip contentStyle={{ fontSize: '12px' }} />
                 {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
                 <Bar 
                   dataKey="value" 
                   fill={colors[0]} 
-                  maxBarSize={50}
+                  maxBarSize={30}
                   minPointSize={2}
                 >
                   {chartData.map((entry: any, index: number) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={('color' in entry && entry.color) ? entry.color : colors[index % colors.length]} 
+                    />
+                  ))}
+                </Bar>
+              </RechartsBarChart>
+            ) : type === 'ranking' ? (
+              <RechartsBarChart 
+                data={chartData}
+                margin={getMargin()}
+                layout="horizontal"
+                barCategoryGap={5}
+              >
+                <XAxis 
+                  type="number"
+                  domain={[0, 'dataMax']}
+                  tickFormatter={formatPercentage}
+                  tick={{ fontSize: 10 }}
+                />
+                <YAxis 
+                  dataKey="name"
+                  type="category"
+                  width={190} 
+                  tick={{ fontSize: 10 }}
+                />
+                <Tooltip 
+                  formatter={(value) => [`${(Number(value) * 100).toFixed(0)}%`, "Automation Risk"]}
+                  contentStyle={{ fontSize: '12px' }}
+                />
+                {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
+                <Bar 
+                  dataKey="value" 
+                  fill={colors[0]} 
+                  name="Automation Risk"
+                  maxBarSize={20}
+                >
+                  {chartData.map((entry: any, index: number) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={('color' in entry && entry.color) ? entry.color : colors[0]} 
                     />
                   ))}
                 </Bar>
