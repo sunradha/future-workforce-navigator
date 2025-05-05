@@ -42,7 +42,9 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   // Check if there's ranking data to display
   const hasRankingChart = results.result.chart && 
     results.result.chart.type === 'ranking' && 
-    results.result.chart.data;
+    results.result.chart.data && 
+    results.result.chart.data.labels && 
+    results.result.chart.data.y;
     
   // Check if there's standard chart data to display (bar or pie)
   const hasStandardChartData = results.result.chart && 

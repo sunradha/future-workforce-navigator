@@ -47,6 +47,14 @@ const ChartCard: React.FC<ChartCardProps> = ({
       return apiData;
     }
 
+    // Handle ranking chart data format (labels and y arrays)
+    if (apiData && apiData.labels && apiData.y && type === 'ranking') {
+      return apiData.labels.map((label: string, index: number) => ({
+        name: label || `Item ${index + 1}`,
+        value: apiData.y[index] || 0,
+      })).filter((item: any) => item.name !== 'null');
+    }
+
     // Handle time series data format
     if (apiData && apiData.x && apiData.y) {
       // For time series, transform the data into an array of objects
@@ -100,6 +108,8 @@ const ChartCard: React.FC<ChartCardProps> = ({
     return `${(value * 100).toFixed(0)}%`;
   };
 
+  console.log("ChartCard rendering with type:", type, "and data:", chartData);
+
   return (
     <Card className={`overflow-hidden ${className}`}>
       <CardHeader className="pb-2 px-3 py-2">
@@ -113,7 +123,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
               <RechartsBarChart 
                 data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
-                layout={type === 'ranking' ? 'vertical' : 'vertical'}
+                layout={type === 'ranking' ? 'horizontal' : 'vertical'}
               >
                 {type === 'ranking' ? (
                   <>
