@@ -4,8 +4,22 @@ import { ProcessMiningResponse } from '@/services/ProcessMiningService';
 import AnalysisCard from './AnalysisCard';
 import ProcessGraph from './ProcessGraph';
 import ChartCard from '@/components/ChartCard';
-import { Route } from 'lucide-react';
+import { Route, Code } from 'lucide-react';
 import KnowledgeGraph from './KnowledgeGraph';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface AnalysisResultsProps {
   results: ProcessMiningResponse;
@@ -25,8 +39,60 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
     ['knowledge_graph', 'causal_graph'].includes(results.result.chart.type || '') && 
     results.result.chart.data;
 
+  // Check if SQL data exists
+  const hasSqlData = results.result.sql && 
+    (results.result.sql.nodes_sql || results.result.sql.edges_sql);
+
   console.log("Chart type:", results.result.chart?.type);
   console.log("Knowledge graph data:", hasKnowledgeGraph, results.result.chart?.data);
+
+  // Format SQL for display
+  const formatSql = (sql: string | undefined) => {
+    if (!sql) return "";
+    return sql.replace(/\n/g, '<br>').replace(/ {2}/g, '&nbsp;&nbsp;');
+  };
+
+  const renderSqlButton = () => {
+    if (!hasSqlData) return null;
+    
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="ml-2 h-6 px-2 py-1 text-xs"
+          >
+            <Code className="h-3.5 w-3.5 mr-1" />
+            SQL
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>SQL Queries</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 overflow-auto max-h-[60vh]">
+            {results.result.sql?.nodes_sql && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Nodes Query:</h3>
+                <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
+                  {results.result.sql.nodes_sql}
+                </pre>
+              </div>
+            )}
+            {results.result.sql?.edges_sql && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Edges Query:</h3>
+                <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
+                  {results.result.sql.edges_sql}
+                </pre>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -40,6 +106,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         
         <AnalysisCard 
           title="Reasoning Path"
+          titleExtra={renderSqlButton()}
           content={results.result.reasoning_path || (results.result.intent_justification || '')}
           inline={true}
           type="path"

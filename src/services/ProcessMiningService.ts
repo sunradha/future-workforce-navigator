@@ -32,6 +32,10 @@ export interface ProcessMiningResponse {
         edges: Edge[];
       };
     };
+    sql?: {
+      nodes_sql?: string;
+      edges_sql?: string;
+    };
     error?: string | null;
   };
 }

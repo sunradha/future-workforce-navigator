@@ -8,9 +8,10 @@ interface AnalysisCardProps {
   content: string;
   inline?: boolean;
   type?: 'reasoning' | 'path' | 'answer' | 'chart';
+  titleExtra?: React.ReactNode;
 }
 
-const AnalysisCard = ({ title, content, inline = false, type = 'reasoning' }: AnalysisCardProps) => {
+const AnalysisCard = ({ title, content, inline = false, type = 'reasoning', titleExtra }: AnalysisCardProps) => {
   // Choose the appropriate icon based on the card type
   const getIcon = () => {
     switch (type) {
@@ -35,7 +36,10 @@ const AnalysisCard = ({ title, content, inline = false, type = 'reasoning' }: An
       <CardHeader className="flex flex-row items-start gap-2 py-2 px-3 bg-gray-50/50 dark:bg-gray-800/50">
         <div className="mt-0.5">{getIcon()}</div>
         <div className="flex flex-col space-y-1 w-full">
-          <h3 className="text-sm font-semibold">{title}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">{title}</h3>
+            {titleExtra}
+          </div>
           {inline && <p className="text-sm text-gray-700 dark:text-gray-300 break-words">{content}</p>}
         </div>
       </CardHeader>
