@@ -50,7 +50,7 @@ const RankingChart: React.FC<RankingChartProps> = ({
       <BarChart
         data={data}
         layout="vertical"
-        margin={{ top: 5, right: 40, left: 20, bottom: 5 }}
+        margin={{ top: 5, right: 40, left: 0, bottom: 5 }}
         barSize={20}
       >
         <XAxis 
@@ -62,10 +62,35 @@ const RankingChart: React.FC<RankingChartProps> = ({
         <YAxis 
           type="category" 
           dataKey="name" 
-          width={300}
-          tick={{ fontSize: 12 }}
+          width={220}
+          tick={{ 
+            fontSize: 12,
+            width: 200,
+            lineHeight: "16px",
+            wordWrap: "break-word"
+          }}
           axisLine={false}
           tickLine={false}
+          tickFormatter={(value) => {
+            // If value is longer than 30 chars, split it to multiple lines
+            if (value.length > 30) {
+              const words = value.split(' ');
+              let result = '';
+              let currentLine = '';
+              
+              words.forEach(word => {
+                if ((currentLine + word).length < 30) {
+                  currentLine += (currentLine ? ' ' : '') + word;
+                } else {
+                  result += (result ? '\n' : '') + currentLine;
+                  currentLine = word;
+                }
+              });
+              
+              return result + (currentLine ? '\n' + currentLine : '');
+            }
+            return value;
+          }}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar 
