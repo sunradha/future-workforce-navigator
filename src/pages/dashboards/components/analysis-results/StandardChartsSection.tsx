@@ -45,7 +45,8 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
 
   // Determine title and subtitle based on chart type or query content
   const getRankingChartTitle = () => {
-    const query = results.process_mining_result?.toLowerCase() || '';
+    // Use results.result.reasoning_answer instead of the non-existent process_mining_result
+    const query = results.result.reasoning_answer?.toLowerCase() || '';
     
     if (query.includes('automation risk') || query.includes('risk of automation')) {
       return {
