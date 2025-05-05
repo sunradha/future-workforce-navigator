@@ -22,6 +22,11 @@ export interface ProcessMiningResponse {
         labels?: string[];
         nodes?: Node[];
         edges?: Edge[];
+        categories?: string[];
+        series?: Array<{
+          name: string;
+          data: number[];
+        }>;
       };
       schema_kg?: {
         nodes: string[];
