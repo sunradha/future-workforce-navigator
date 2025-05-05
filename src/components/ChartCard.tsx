@@ -75,7 +75,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
         const value = apiData.y[index] || 0;
         return {
           name: label || `Item ${index + 1}`,
-          value: Math.round(value * 100), // Convert 0.72 to 72 for display
+          value: Math.round(value * 100), // Convert decimal to percentage for display
           originalValue: value // Store the original decimal value
         };
       }).filter((item: any) => item.name !== 'null');

@@ -20,11 +20,12 @@ interface RankingChartProps {
 }
 
 const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
-  // Transform data for proper display
+  // Transform data for proper display - ensure values are properly converted to percentages
   const transformedData = data.map(item => ({
     name: item.name,
-    value: typeof item.originalValue === 'number' ? Math.round(item.originalValue * 100) : item.value,
-    displayValue: item.value
+    value: item.originalValue ? Math.round(item.originalValue * 100) : Math.round(item.value),
+    displayValue: item.value,
+    originalValue: item.originalValue
   }));
   
   // Format percentage values for axis
@@ -32,10 +33,23 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
     return `${value}%`;
   };
 
-  // Format tooltip percentage 
-  const formatTooltipPercentage = (value: number): string => {
-    return `${value.toFixed(0)}%`;
+  // Custom tooltip formatter to show the proper percentage value
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const displayValue = data.originalValue ? Math.round(data.originalValue * 100) : data.value;
+      
+      return (
+        <div className="custom-tooltip bg-white p-2 border border-gray-200 shadow-md rounded text-xs">
+          <p className="font-semibold">{data.name}</p>
+          <p>{`Automation Risk: ${displayValue}%`}</p>
+        </div>
+      );
+    }
+    return null;
   };
+
+  console.log("RankingChart rendering with data:", transformedData);
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -58,10 +72,7 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
           width={80}
           tick={{ fontSize: 10 }}
         />
-        <Tooltip 
-          formatter={(value: number) => [formatTooltipPercentage(value), "Automation Risk"]}
-          contentStyle={{ fontSize: '12px' }}
-        />
+        <Tooltip content={<CustomTooltip />} />
         <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />
         <Bar 
           dataKey="value" 
