@@ -161,7 +161,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
                 subtitle="Ranked comparisons"
                 type="ranking"
                 data={results.result.chart.data}
-                height={500}  {/* Slightly taller to accommodate vertical bars */}
+                height={500}  /* Slightly taller to accommodate vertical bars */
                 className="w-full"
               />
             </div>
