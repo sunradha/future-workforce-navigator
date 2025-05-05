@@ -1,21 +1,13 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Bar,
-  BarChart as RechartsBarChart,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { ChartData, BarData } from '@/types';
+import BarChart from './charts/BarChart';
+import PieChart from './charts/PieChart';
+import TimeSeriesChart from './charts/TimeSeriesChart';
+import ComparativeBarChart from './charts/ComparativeBarChart';
 import RankingChart from './charts/RankingChart';
+import { transformApiData } from './charts/utils/chartUtils';
 
 interface ChartCardProps {
   title: string;
@@ -40,70 +32,10 @@ const ChartCard: React.FC<ChartCardProps> = ({
   height = 300,
   className = '',
 }) => {
-  // Function to transform API chart data to the format expected by recharts
-  const transformApiData = (apiData: any): ChartData | any => {
-    // If data is already in the expected format, return it
-    if (Array.isArray(apiData)) {
-      return apiData;
-    }
-
-    // Handle comparative_bar chart data format (categories and series)
-    if (apiData && apiData.categories && apiData.series && type === 'comparative_bar') {
-      // Filter out null values and transform the data
-      return apiData.categories
-        .map((category: string, index: number) => {
-          if (!category) return null; // Skip null categories
-          
-          const item: any = { name: category };
-          
-          // Add data from each series
-          apiData.series.forEach((series: any) => {
-            if (series.name && series.data && index < series.data.length) {
-              item[series.name] = series.data[index];
-            }
-          });
-          
-          return item;
-        })
-        .filter(Boolean); // Remove null entries
-    }
-
-    // Handle ranking chart data format (labels and y arrays)
-    if (apiData && apiData.labels && apiData.y && type === 'ranking') {
-      return apiData.labels.map((label: string, index: number) => {
-        // Get the raw value from the y array
-        const value = apiData.y[index] || 0;
-        return {
-          name: label || `Item ${index + 1}`,
-          // Pass the raw value directly
-          value: value,
-        };
-      }).filter((item: any) => item.name !== 'null');
-    }
-
-    // Handle time series data format
-    if (apiData && apiData.x && apiData.y) {
-      // For time series, transform the data into an array of objects
-      return apiData.x.map((label: string, index: number) => ({
-        name: label,
-        value: apiData.y[index] || 0,
-      }));
-    }
-
-    // Handle the API response format where data has x, y, labels
-    if (apiData && apiData.y && apiData.labels) {
-      return apiData.labels.map((label: string, index: number) => ({
-        name: label || `Item ${index + 1}`,
-        value: apiData.y[index] || 0,
-      })).filter((item: any) => item.name !== 'null');
-    }
-
-    // Fallback for empty or invalid data
-    return [];
-  };
-
   // Transform the data if needed
-  const chartData = transformApiData(data);
+  const chartData = transformApiData(data, type);
+
+  console.log("ChartCard rendering with type:", type, "and data:", chartData);
 
   if (chartData.length === 0) {
     return (
@@ -119,17 +51,11 @@ const ChartCard: React.FC<ChartCardProps> = ({
     );
   }
 
-  // Format Y-axis ticks - ensure it always returns a string
-  const formatYAxisTick = (value: number): string => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}K`;
-    }
-    return value.toString();
-  };
-
-  console.log("ChartCard rendering with type:", type, "and data:", chartData);
+  // Extract series names for comparative bar chart
+  let seriesNames: string[] = [];
+  if (type === 'comparative_bar' && data.series) {
+    seriesNames = data.series.map((series: any) => series.name);
+  }
 
   return (
     <Card className={`overflow-hidden ${className}`}>
@@ -139,128 +65,48 @@ const ChartCard: React.FC<ChartCardProps> = ({
       </CardHeader>
       <CardContent className="p-0 w-full">
         <div style={{ width: '100%', height }} className="w-full">
-          {type === 'ranking' ? (
-            <RankingChart data={chartData} height={height} />
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              {type === 'bar' ? (
-                <RechartsBarChart 
-                  data={chartData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
-                  layout="vertical"
-                >
-                  <XAxis 
-                    type="number"
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={formatYAxisTick}
-                  />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category"
-                    width={120}
-                    tick={{ fontSize: 10 }}
-                  />
-                  <Tooltip contentStyle={{ fontSize: '12px' }} />
-                  {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                  <Bar 
-                    dataKey="value" 
-                    fill={colors[0]} 
-                    maxBarSize={30}
-                    minPointSize={2}
-                  >
-                    {chartData.map((entry: any, index: number) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={('color' in entry && entry.color) ? entry.color : colors[index % colors.length]} 
-                      />
-                    ))}
-                  </Bar>
-                </RechartsBarChart>
-              ) : type === 'comparative_bar' ? (
-                <RechartsBarChart 
-                  data={chartData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 100 }}
-                  layout="vertical"
-                  barGap={5}
-                >
-                  <XAxis 
-                    type="number" 
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={formatYAxisTick}
-                  />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    width={140}
-                    tick={{ fontSize: 10 }}
-                  />
-                  <Tooltip contentStyle={{ fontSize: '12px' }} />
-                  {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                  {/* Dynamically render bars for each series */}
-                  {data.series && Array.isArray(data.series) && data.series.map((series: any, index: number) => (
-                    <Bar 
-                      key={`series-${index}`}
-                      dataKey={series.name} 
-                      fill={colors[index % colors.length]} 
-                      name={series.name}
-                      maxBarSize={30}
-                    />
-                  ))}
-                </RechartsBarChart>
-              ) : type === 'time_series' ? (
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
-                >
-                  <XAxis
-                    dataKey="name"
-                    angle={0}
-                    textAnchor="middle"
-                    height={60}
-                    tick={{ fontSize: 10 }}
-                    tickMargin={8}
-                  />
-                  <YAxis
-                    width={50}
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={formatYAxisTick}
-                  />
-                  <Tooltip contentStyle={{ fontSize: '12px' }} />
-                  {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke={colors[0]}
-                    strokeWidth={2}
-                    dot={{ r: 4, fill: colors[0] }}
-                    activeDot={{ r: 6, fill: colors[0] }}
-                  />
-                </LineChart>
-              ) : (
-                <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    nameKey="name"
-                    label={({ name, percent }) => percent > 0.05 ? `${name}: ${(percent * 100).toFixed(0)}%` : ''}
-                  >
-                    {chartData.map((entry: any, index: number) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={('color' in entry && entry.color) ? entry.color : colors[index % colors.length]} 
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} contentStyle={{ fontSize: '12px' }} />
-                  {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                </PieChart>
-              )}
-            </ResponsiveContainer>
+          {type === 'bar' && (
+            <BarChart 
+              data={chartData} 
+              colors={colors} 
+              showLegend={showLegend} 
+              height={height} 
+            />
+          )}
+
+          {type === 'pie' && (
+            <PieChart 
+              data={chartData} 
+              colors={colors} 
+              showLegend={showLegend} 
+              height={height} 
+            />
+          )}
+
+          {type === 'time_series' && (
+            <TimeSeriesChart 
+              data={chartData} 
+              colors={colors} 
+              showLegend={showLegend} 
+              height={height} 
+            />
+          )}
+
+          {type === 'comparative_bar' && (
+            <ComparativeBarChart 
+              data={chartData} 
+              colors={colors} 
+              seriesNames={seriesNames}
+              showLegend={showLegend} 
+              height={height} 
+            />
+          )}
+
+          {type === 'ranking' && (
+            <RankingChart 
+              data={chartData}
+              height={height} 
+            />
           )}
         </div>
       </CardContent>
