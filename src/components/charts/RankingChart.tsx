@@ -21,9 +21,9 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
   // Transform the data to ensure values are properly displayed as percentages
   const transformedData = data.map(item => ({
     name: item.name,
-    value: typeof item.value === 'number' ? 
+    value: typeof item.value === 'number' 
       // If the value is a decimal (like 0.53), convert to percentage (53)
-      item.value < 1 ? Math.round(item.value * 100) : item.value,
+      ? (item.value < 1 ? Math.round(item.value * 100) : item.value)
   }));
 
   console.log('RankingChart rendering with transformedData:', transformedData);
