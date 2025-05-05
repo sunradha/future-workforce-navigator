@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ProcessMiningResponse } from '@/services/ProcessMiningService';
 import AnalysisCard from './AnalysisCard';
@@ -20,6 +19,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface AnalysisResultsProps {
   results: ProcessMiningResponse;
@@ -63,11 +68,9 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   console.log("Ranking data:", hasRankingChart, results.result.chart?.data);
   console.log("Comparative bar chart:", hasComparativeBarChart, results.result.chart?.data);
 
-  // Format SQL for display
-  const formatSql = (sql: string | undefined) => {
-    if (!sql) return "";
-    return sql.replace(/\n/g, '<br>').replace(/ {2}/g, '&nbsp;&nbsp;');
-  };
+  // Check SQL type
+  const hasSqlObject = results.result.sql && typeof results.result.sql === 'object';
+  const hasSqlString = results.result.sql && typeof results.result.sql === 'string';
 
   const renderSqlButton = () => {
     if (!results.result.sql) return null;
@@ -89,9 +92,30 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
             <DialogTitle>SQL Query</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 overflow-auto max-h-[60vh]">
-            <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
-              {typeof results.result.sql === 'string' ? results.result.sql : JSON.stringify(results.result.sql, null, 2)}
-            </pre>
+            {hasSqlString && (
+              <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
+                {results.result.sql as string}
+              </pre>
+            )}
+            
+            {hasSqlObject && (
+              <Tabs defaultValue="nodes" className="w-full">
+                <TabsList className="mb-2">
+                  <TabsTrigger value="nodes">Nodes SQL</TabsTrigger>
+                  <TabsTrigger value="edges">Edges SQL</TabsTrigger>
+                </TabsList>
+                <TabsContent value="nodes" className="mt-0">
+                  <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
+                    {(results.result.sql as {nodes_sql?: string}).nodes_sql || 'No nodes SQL available'}
+                  </pre>
+                </TabsContent>
+                <TabsContent value="edges" className="mt-0">
+                  <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
+                    {(results.result.sql as {edges_sql?: string}).edges_sql || 'No edges SQL available'}
+                  </pre>
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         </DialogContent>
       </Dialog>
