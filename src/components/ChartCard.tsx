@@ -75,7 +75,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
         const value = apiData.y[index] || 0;
         return {
           name: label || `Item ${index + 1}`,
-          // Pass the raw value directly to RankingChart - it will handle the conversion
+          // Pass the raw value directly
           value: value,
         };
       }).filter((item: any) => item.name !== 'null');
@@ -139,127 +139,129 @@ const ChartCard: React.FC<ChartCardProps> = ({
       </CardHeader>
       <CardContent className="p-0 w-full">
         <div style={{ width: '100%', height }} className="w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            {type === 'bar' ? (
-              <RechartsBarChart 
-                data={chartData}
-                margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
-                layout="vertical"
-              >
-                <XAxis 
-                  type="number"
-                  tick={{ fontSize: 10 }}
-                  tickFormatter={formatYAxisTick}
-                />
-                <YAxis 
-                  dataKey="name" 
-                  type="category"
-                  width={120}
-                  tick={{ fontSize: 10 }}
-                />
-                <Tooltip contentStyle={{ fontSize: '12px' }} />
-                {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                <Bar 
-                  dataKey="value" 
-                  fill={colors[0]} 
-                  maxBarSize={30}
-                  minPointSize={2}
-                >
-                  {chartData.map((entry: any, index: number) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={('color' in entry && entry.color) ? entry.color : colors[index % colors.length]} 
-                    />
-                  ))}
-                </Bar>
-              </RechartsBarChart>
-            ) : type === 'ranking' ? (
-              <RankingChart data={chartData} height={height} />
-            ) : type === 'comparative_bar' ? (
-              <RechartsBarChart 
-                data={chartData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 100 }}
-                layout="vertical"
-                barGap={5}
-              >
-                <XAxis 
-                  type="number" 
-                  tick={{ fontSize: 10 }}
-                  tickFormatter={formatYAxisTick}
-                />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={140}
-                  tick={{ fontSize: 10 }}
-                />
-                <Tooltip contentStyle={{ fontSize: '12px' }} />
-                {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                {/* Dynamically render bars for each series */}
-                {data.series && Array.isArray(data.series) && data.series.map((series: any, index: number) => (
-                  <Bar 
-                    key={`series-${index}`}
-                    dataKey={series.name} 
-                    fill={colors[index % colors.length]} 
-                    name={series.name}
-                    maxBarSize={30}
-                  />
-                ))}
-              </RechartsBarChart>
-            ) : type === 'time_series' ? (
-              <LineChart
-                data={chartData}
-                margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
-              >
-                <XAxis
-                  dataKey="name"
-                  angle={0}
-                  textAnchor="middle"
-                  height={60}
-                  tick={{ fontSize: 10 }}
-                  tickMargin={8}
-                />
-                <YAxis
-                  width={50}
-                  tick={{ fontSize: 10 }}
-                  tickFormatter={formatYAxisTick}
-                />
-                <Tooltip contentStyle={{ fontSize: '12px' }} />
-                {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke={colors[0]}
-                  strokeWidth={2}
-                  dot={{ r: 4, fill: colors[0] }}
-                  activeDot={{ r: 6, fill: colors[0] }}
-                />
-              </LineChart>
-            ) : (
-              <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-                <Pie
+          {type === 'ranking' ? (
+            <RankingChart data={chartData} height={height} />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              {type === 'bar' ? (
+                <RechartsBarChart 
                   data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  nameKey="name"
-                  label={({ name, percent }) => percent > 0.05 ? `${name}: ${(percent * 100).toFixed(0)}%` : ''}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
+                  layout="vertical"
                 >
-                  {chartData.map((entry: any, index: number) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={('color' in entry && entry.color) ? entry.color : colors[index % colors.length]} 
+                  <XAxis 
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={formatYAxisTick}
+                  />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category"
+                    width={120}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip contentStyle={{ fontSize: '12px' }} />
+                  {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
+                  <Bar 
+                    dataKey="value" 
+                    fill={colors[0]} 
+                    maxBarSize={30}
+                    minPointSize={2}
+                  >
+                    {chartData.map((entry: any, index: number) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={('color' in entry && entry.color) ? entry.color : colors[index % colors.length]} 
+                      />
+                    ))}
+                  </Bar>
+                </RechartsBarChart>
+              ) : type === 'comparative_bar' ? (
+                <RechartsBarChart 
+                  data={chartData}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 100 }}
+                  layout="vertical"
+                  barGap={5}
+                >
+                  <XAxis 
+                    type="number" 
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={formatYAxisTick}
+                  />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={140}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip contentStyle={{ fontSize: '12px' }} />
+                  {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
+                  {/* Dynamically render bars for each series */}
+                  {data.series && Array.isArray(data.series) && data.series.map((series: any, index: number) => (
+                    <Bar 
+                      key={`series-${index}`}
+                      dataKey={series.name} 
+                      fill={colors[index % colors.length]} 
+                      name={series.name}
+                      maxBarSize={30}
                     />
                   ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} contentStyle={{ fontSize: '12px' }} />
-                {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-              </PieChart>
-            )}
-          </ResponsiveContainer>
+                </RechartsBarChart>
+              ) : type === 'time_series' ? (
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
+                >
+                  <XAxis
+                    dataKey="name"
+                    angle={0}
+                    textAnchor="middle"
+                    height={60}
+                    tick={{ fontSize: 10 }}
+                    tickMargin={8}
+                  />
+                  <YAxis
+                    width={50}
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={formatYAxisTick}
+                  />
+                  <Tooltip contentStyle={{ fontSize: '12px' }} />
+                  {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke={colors[0]}
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: colors[0] }}
+                    activeDot={{ r: 6, fill: colors[0] }}
+                  />
+                </LineChart>
+              ) : (
+                <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, percent }) => percent > 0.05 ? `${name}: ${(percent * 100).toFixed(0)}%` : ''}
+                  >
+                    {chartData.map((entry: any, index: number) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={('color' in entry && entry.color) ? entry.color : colors[index % colors.length]} 
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} contentStyle={{ fontSize: '12px' }} />
+                  {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
+                </PieChart>
+              )}
+            </ResponsiveContainer>
+          )}
         </div>
       </CardContent>
     </Card>

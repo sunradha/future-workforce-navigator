@@ -47,15 +47,12 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   // Check if there's ranking data to display
   const hasRankingChart = results.result.chart && 
     results.result.chart.type === 'ranking' && 
-    results.result.chart.data &&
-    (results.result.chart.data.labels || results.result.chart.data.y);
+    results.result.chart.data;
     
   // Check if there's comparative bar chart data
   const hasComparativeBarChart = results.result.chart &&
     results.result.chart.type === 'comparative_bar' &&
-    results.result.chart.data &&
-    results.result.chart.data.categories &&
-    results.result.chart.data.series;
+    results.result.chart.data;
 
   // Check if there's standard chart data to display (bar or pie)
   const hasStandardChartData = results.result.chart && 
@@ -63,10 +60,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
     !['knowledge_graph', 'causal_graph', 'time_series', 'ranking', 'comparative_bar'].includes(results.result.chart.type || '');
 
   console.log("Chart type:", results.result.chart?.type);
-  console.log("Knowledge graph data:", hasKnowledgeGraph, results.result.chart?.data);
-  console.log("Time series data:", hasTimeSeriesChart, results.result.chart?.data);
   console.log("Ranking data:", hasRankingChart, results.result.chart?.data);
-  console.log("Comparative bar chart:", hasComparativeBarChart, results.result.chart?.data);
 
   // Check SQL type
   const hasSqlObject = results.result.sql && typeof results.result.sql === 'object';
@@ -148,9 +142,10 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         />
       </div>
 
-      {/* Standard charts (bar, pie), time series, ranking and comparative bar charts */}
+      {/* Charts section */}
       {(hasStandardChartData || hasTimeSeriesChart || hasRankingChart || hasComparativeBarChart) && !hasKnowledgeGraph && (
         <div className="grid gap-3 grid-cols-1">
+          {/* Process Graph */}
           {results.result.graph && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
@@ -161,6 +156,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
             </div>
           )}
           
+          {/* Standard Charts */}
           {hasStandardChartData && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <ChartCard
@@ -174,6 +170,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
             </div>
           )}
 
+          {/* Time Series Chart */}
           {hasTimeSeriesChart && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <ChartCard
@@ -187,11 +184,12 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
             </div>
           )}
           
+          {/* Ranking Chart */}
           {hasRankingChart && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <ChartCard
-                title="Automation Risk by Job Role"
-                subtitle="Jobs ranked by automation probability (%)"
+                title="Automation Risk by Area"
+                subtitle="Areas ranked by automation probability"
                 type="ranking"
                 data={results.result.chart.data}
                 height={550}
@@ -200,6 +198,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
             </div>
           )}
           
+          {/* Comparative Bar Chart */}
           {hasComparativeBarChart && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <ChartCard
@@ -218,7 +217,6 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
       {/* Knowledge Graph or Causal Graph Visualization */}
       {hasKnowledgeGraph && (
         <div className="space-y-6">
-          {/* Single graph visualization */}
           <KnowledgeGraph 
             title={results.result.chart.type === 'knowledge_graph' ? 'Knowledge Graph' : 'Causal Graph'}
             nodes={results.result.chart.data.nodes}
