@@ -52,12 +52,15 @@ export const useEdgeRenderer = (
     .attr("background", "white");
   
   // Add white background rectangle for better readability
+  // Fixed: Proper handling of the parent selection
   linkLabels.each(function() {
     const bbox = this.getBBox();
     const padding = 2;
     
-    d3.select(this.parentNode)
-      .insert("rect", "text")
+    // Properly select the parent node using d3.select(this.parentNode)
+    const parentGroup = d3.select(this.parentNode as Element);
+    
+    parentGroup.insert("rect", "text")
       .attr("x", bbox.x - padding)
       .attr("y", bbox.y - padding)
       .attr("width", bbox.width + (padding * 2))
