@@ -20,13 +20,21 @@ interface RankingChartProps {
 }
 
 const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
-  // Transform data for proper display - ensure values are properly converted to percentages
-  const transformedData = data.map(item => ({
-    name: item.name,
-    value: item.originalValue ? Math.round(item.originalValue * 100) : Math.round(item.value),
-    displayValue: item.value,
-    originalValue: item.originalValue
-  }));
+  // Transform data for proper display - convert decimal values to percentages (0.54 to 54)
+  const transformedData = data.map(item => {
+    // Check if we're dealing with decimal values that need to be converted to percentages
+    const isDecimal = item.originalValue !== undefined ? 
+      item.originalValue < 1 : 
+      item.value < 1;
+    
+    return {
+      name: item.name,
+      // If value is decimal (like 0.54), multiply by 100 to get percentage (54)
+      value: isDecimal ? Math.round((item.originalValue || item.value) * 100) : item.value,
+      // Store original value for reference
+      originalValue: item.originalValue || item.value
+    };
+  });
   
   // Format percentage values for axis
   const formatPercentage = (value: number): string => {
@@ -37,19 +45,18 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
-      const displayValue = data.originalValue ? Math.round(data.originalValue * 100) : data.value;
       
       return (
         <div className="custom-tooltip bg-white p-2 border border-gray-200 shadow-md rounded text-xs">
           <p className="font-semibold">{data.name}</p>
-          <p>{`Automation Risk: ${displayValue}%`}</p>
+          <p>{`Automation Risk: ${data.value}%`}</p>
         </div>
       );
     }
     return null;
   };
 
-  console.log("RankingChart rendering with data:", transformedData);
+  console.log("RankingChart rendering with transformed data:", transformedData);
 
   return (
     <ResponsiveContainer width="100%" height={height}>

@@ -72,11 +72,13 @@ const ChartCard: React.FC<ChartCardProps> = ({
     // Handle ranking chart data format (labels and y arrays)
     if (apiData && apiData.labels && apiData.y && type === 'ranking') {
       return apiData.labels.map((label: string, index: number) => {
+        // Get the raw value from the y array
         const value = apiData.y[index] || 0;
         return {
           name: label || `Item ${index + 1}`,
-          value: Math.round(value * 100), // Convert decimal to percentage for display
-          originalValue: value // Store the original decimal value
+          // Store the raw value, don't multiply by 100 here - RankingChart will handle that
+          value: value,
+          // We don't need originalValue anymore since we're passing the raw value directly
         };
       }).filter((item: any) => item.name !== 'null');
     }
