@@ -31,7 +31,7 @@ export const useNodeRenderer = (
     .call(d3.drag<SVGGElement, Node>()
       .on("start", (event) => dragstarted(event, simulation))
       .on("drag", (event) => dragged(event))
-      .on("end", (event) => dragended(event, simulation)) as any);
+      .on("end", (event) => dragended(event, simulation)));
 
   // Add node circles
   const node = nodeGroup.append("circle")
@@ -52,7 +52,31 @@ export const useNodeRenderer = (
     .attr("dx", 0)
     .attr("dy", 30)
     .attr("text-anchor", "middle")
-    .attr("fill", "#333");
+    .attr("fill", "#333")
+    .each(function(d: any) {
+      // Wrap long text labels
+      const text = d3.select(this);
+      const words = cleanTextFn(d.label).split(/\s+/).reverse();
+      const lineHeight = 1.1; // ems
+      const y = text.attr("dy");
+      const dy = parseFloat(y);
+      let word;
+      let line: string[] = [];
+      let lineNumber = 0;
+      let tspan = text.text(null).append("tspan").attr("x", 0).attr("y", 0).attr("dy", dy + "px");
+      
+      // Create multiple lines for long labels
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (line.join(" ").length > 15) { // Adjust this value based on your needs
+          line.pop();
+          tspan.text(line.join(" "));
+          line = [word];
+          tspan = text.append("tspan").attr("x", 0).attr("y", 0).attr("dy", (++lineNumber * lineHeight + dy) + "px").text(word);
+        }
+      }
+    });
 
   // Add tooltips for nodes
   node.append("title")
@@ -83,8 +107,8 @@ export const dragended = (
   simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>
 ) => {
   if (!event.active) simulation.alphaTarget(0);
-  // Keep nodes in fixed positions after drag for causal graphs
-  // This makes the graph more stable
+  // Fixed positions are maintained to make the graph more stable
+  // Uncomment the lines below if you want nodes to return to free-floating state
   // event.subject.fx = null;
   // event.subject.fy = null;
 };

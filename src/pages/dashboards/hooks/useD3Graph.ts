@@ -42,12 +42,17 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       return;
     }
 
-    // Initialize the force simulation
+    // Initialize the force simulation with better positioning
     const simulation = useGraphSimulation(
       nodes, 
       validEdges, 
       containerWidth / 2, 
-      height / 2
+      height / 2,
+      {
+        linkDistance: 200,
+        chargeStrength: -800,
+        collideRadius: 80
+      }
     );
     
     // Render edges and their labels
@@ -60,28 +65,60 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     simulation.on("tick", () => {
       // Update link paths for curved edges
       link.attr("d", (d: any) => {
-        const dx = d.target.x - d.source.x;
-        const dy = d.target.y - d.source.y;
+        // Get source and target coordinates
+        const sourceX = d.source.x || 0;
+        const sourceY = d.source.y || 0;
+        const targetX = d.target.x || 0;
+        const targetY = d.target.y || 0;
+        
+        const dx = targetX - sourceX;
+        const dy = targetY - sourceY;
         const dr = Math.sqrt(dx * dx + dy * dy);
         
         // Direct path for self-loops
         if (d.source === d.target) {
-          return `M${d.source.x},${d.source.y} A1,1 0 0,1 ${d.target.x},${d.target.y}`;
+          return `M${sourceX},${sourceY} A1,1 0 0,1 ${targetX},${targetY}`;
         }
         
         // Curved path for normal links
-        return `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+        return `M${sourceX},${sourceY} A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
       });
 
-      // Update link label positions
+      // Update link label positions to be at the midpoint
       linkLabels
-        .attr("x", (d: any) => (d.source.x + d.target.x) / 2)
-        .attr("y", (d: any) => (d.source.y + d.target.y) / 2);
+        .attr("x", (d: any) => {
+          const sourceX = d.source.x || 0;
+          const targetX = d.target.x || 0;
+          return (sourceX + targetX) / 2;
+        })
+        .attr("y", (d: any) => {
+          const sourceY = d.source.y || 0;
+          const targetY = d.target.y || 0;
+          return (sourceY + targetY) / 2;
+        });
 
       // Update node group positions
       nodeGroup
-        .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+        .attr("transform", (d: any) => `translate(${d.x || 0},${d.y || 0})`);
     });
+
+    // Add a zoom handler with better initial zoom
+    const zoomHandler = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.3, 3])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      });
+
+    svg.call(zoomHandler);
+    
+    // Initial zoom to fit the graph better
+    const initialZoom = 0.9; // Zoom out slightly
+    const initialTransform = d3.zoomIdentity
+      .translate(containerWidth / 2, height / 2)
+      .scale(initialZoom)
+      .translate(-containerWidth / 2, -height / 2);
+    
+    svg.call(zoomHandler.transform, initialTransform);
 
     // Add a resize event listener
     const handleResize = () => {
@@ -96,8 +133,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     window.addEventListener("resize", handleResize);
 
-    // Start simulation
-    simulation.restart();
+    // Start simulation with higher alpha for better initial layout
+    simulation.alpha(0.8).restart();
     
     // Stop simulation after 3 seconds to save resources, 
     // but leave it running longer initially for better layout
