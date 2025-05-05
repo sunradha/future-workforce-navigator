@@ -190,8 +190,8 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
           {hasRankingChart && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <ChartCard
-                title="Ranking Analysis"
-                subtitle="Ranked comparisons"
+                title="Automation Risk by Job Role"
+                subtitle="Jobs ranked by automation probability (%)"
                 type="ranking"
                 data={results.result.chart.data}
                 height={550}

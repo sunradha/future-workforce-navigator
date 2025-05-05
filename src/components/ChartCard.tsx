@@ -71,16 +71,12 @@ const ChartCard: React.FC<ChartCardProps> = ({
     // Handle ranking chart data format (labels and y arrays)
     if (apiData && apiData.labels && apiData.y && type === 'ranking') {
       return apiData.labels.map((label: string, index: number) => {
-        // Multiply values below 1 by 100 for better visibility
-        let value = apiData.y[index] || 0;
-        if (value < 1) {
-          value = value * 100;
-        }
+        const value = apiData.y[index] || 0;
         return {
           name: label || `Item ${index + 1}`,
-          value: value,
-          // Original value for tooltip display
-          originalValue: apiData.y[index] || 0
+          value: Math.round(value * 100), // Convert 0.72 to 72 for display
+          // Store the original decimal value (0.72) for tooltip
+          originalValue: value
         };
       }).filter((item: any) => item.name !== 'null');
     }
@@ -135,28 +131,16 @@ const ChartCard: React.FC<ChartCardProps> = ({
 
   // Format percentage values for ranking chart
   const formatPercentage = (value: number): string => {
-    // For ranking chart, we multiply by a factor of 100 for display
-    if (type === 'ranking') {
-      // Convert back to decimal form (0-1) and format as percentage
-      const percentage = value / 100;
-      
-      // Show more precision for smaller values
-      if (percentage < 0.01) {
-        return `${(percentage * 100).toFixed(3)}%`;
-      }
-      
-      return `${(percentage * 100).toFixed(1)}%`;
-    }
-    return `${value.toFixed(0)}%`;
+    return `${value}%`;
   };
 
   // Calculate the appropriate left margin for ranking charts to accommodate labels
   const getMargin = () => {
     if (type === 'ranking') {
-      // Reduced left margin to pull chart more to the left, accept some truncation
-      return { top: 5, right: 30, left: 120, bottom: 5 };
+      // Minimal left margin to show more of the bars
+      return { top: 5, right: 30, left: 5, bottom: 5 };
     } else if (type === 'comparative_bar') {
-      return { top: 10, right: 30, left: 0, bottom: 100 }; // More bottom margin for rotated labels
+      return { top: 10, right: 30, left: 0, bottom: 100 }; 
     }
     return { top: 10, right: 10, left: 0, bottom: 35 };
   };
@@ -210,32 +194,32 @@ const ChartCard: React.FC<ChartCardProps> = ({
                 data={chartData}
                 margin={getMargin()}
                 layout="horizontal"
-                barCategoryGap={5}
+                barGap={0}
+                barCategoryGap={1}
               >
                 <XAxis 
                   type="number"
-                  domain={[0, 'dataMax']}
+                  domain={[0, 100]}
+                  ticks={[0, 20, 40, 60, 80, 100]}
                   tickFormatter={formatPercentage}
                   tick={{ fontSize: 10 }}
-                  ticks={[0, 20, 40, 60, 80, 100]}
                 />
                 <YAxis 
                   dataKey="name"
                   type="category"
-                  width={120} 
-                  tick={{ fontSize: 10 }}
-                  tickFormatter={(value) => {
-                    // Truncate long labels
-                    return value.length > 18 ? value.substring(0, 18) + '...' : value;
-                  }}
+                  hide={true} // Hide the axis to allow more space for bars
                 />
                 <Tooltip 
                   formatter={(value, name, props) => {
-                    // Use the original value for tooltip display
-                    const item = chartData.find(item => item.value === value);
-                    const originalValue = item?.originalValue ?? value;
-                    // Format as percentage with proper precision
-                    return [`${(originalValue * 100).toFixed(1)}%`, "Automation Risk"];
+                    // Display original value as percentage
+                    const item = chartData.find((item: any) => item.value === value);
+                    const originalValue = item?.originalValue ?? (value / 100);
+                    return [`${(originalValue * 100).toFixed(0)}%`, "Automation Risk"];
+                  }}
+                  labelFormatter={(label) => {
+                    // Find the entry with this name to display in tooltip
+                    const entry = chartData.find((item: any) => item.name === label);
+                    return entry ? entry.name : label;
                   }}
                   contentStyle={{ fontSize: '12px' }}
                 />
@@ -244,17 +228,25 @@ const ChartCard: React.FC<ChartCardProps> = ({
                   dataKey="value" 
                   fill="#8B5CF6" 
                   name="Automation Risk"
-                  maxBarSize={20}
-                  animationDuration={0} // Disable animation to avoid empty bars initially
-                  isAnimationActive={false}
-                >
-                  {chartData.map((entry: any, index: number) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill="#8B5CF6"  // Using consistent purple color for all bars
-                    />
-                  ))}
-                </Bar>
+                  background={{ fill: '#f3f4f6' }}
+                  barSize={16}
+                  isAnimationActive={false} // Disable animation
+                  label={(props) => {
+                    const { x, y, width, height, value, name } = props;
+                    // Position label to the left of the bar
+                    return (
+                      <text 
+                        x={x - 5} 
+                        y={y + height / 2} 
+                        dy={4}
+                        textAnchor="end"
+                        fontSize={10}
+                      >
+                        {name}
+                      </text>
+                    );
+                  }}
+                />
               </RechartsBarChart>
             ) : type === 'comparative_bar' ? (
               <RechartsBarChart 
