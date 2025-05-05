@@ -6,6 +6,8 @@ import {
   BarChart as RechartsBarChart,
   Cell,
   Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -18,7 +20,7 @@ import { ChartData, BarData } from '@/types';
 interface ChartCardProps {
   title: string;
   subtitle?: string;
-  type: 'bar' | 'pie';
+  type: 'bar' | 'pie' | 'time_series';
   data: ChartData | BarData | any; // Allow for API response format
   colors?: string[];
   showLegend?: boolean;
@@ -39,10 +41,19 @@ const ChartCard: React.FC<ChartCardProps> = ({
   className = '',
 }) => {
   // Function to transform API chart data to the format expected by recharts
-  const transformApiData = (apiData: any): ChartData => {
+  const transformApiData = (apiData: any): ChartData | any => {
     // If data is already in the expected format, return it
     if (Array.isArray(apiData)) {
       return apiData;
+    }
+
+    // Handle time series data format
+    if (apiData && apiData.x && apiData.y) {
+      // For time series, transform the data into an array of objects
+      return apiData.x.map((label: string, index: number) => ({
+        name: label,
+        value: apiData.y[index] || 0,
+      }));
     }
 
     // Handle the API response format where data has x, y, labels
@@ -74,6 +85,15 @@ const ChartCard: React.FC<ChartCardProps> = ({
     );
   }
 
+  const formatYAxisTick = (value: number) => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}K`;
+    }
+    return value;
+  };
+
   return (
     <Card className={`overflow-hidden ${className}`}>
       <CardHeader className="pb-2 px-3 py-2">
@@ -96,7 +116,11 @@ const ChartCard: React.FC<ChartCardProps> = ({
                   tick={{ fontSize: 10 }}
                   tickMargin={8}
                 />
-                <YAxis width={40} tick={{ fontSize: 10 }} />
+                <YAxis 
+                  width={40} 
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={formatYAxisTick}
+                />
                 <Tooltip contentStyle={{ fontSize: '12px' }} />
                 {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
                 <Bar dataKey="value" fill={colors[0]} maxBarSize={50}>
@@ -108,6 +132,35 @@ const ChartCard: React.FC<ChartCardProps> = ({
                   ))}
                 </Bar>
               </RechartsBarChart>
+            ) : type === 'time_series' ? (
+              <LineChart
+                data={chartData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
+              >
+                <XAxis
+                  dataKey="name"
+                  angle={0}
+                  textAnchor="middle"
+                  height={60}
+                  tick={{ fontSize: 10 }}
+                  tickMargin={8}
+                />
+                <YAxis
+                  width={50}
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={formatYAxisTick}
+                />
+                <Tooltip contentStyle={{ fontSize: '12px' }} />
+                {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={colors[0]}
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: colors[0] }}
+                  activeDot={{ r: 6, fill: colors[0] }}
+                />
+              </LineChart>
             ) : (
               <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                 <Pie

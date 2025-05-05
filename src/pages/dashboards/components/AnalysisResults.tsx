@@ -30,21 +30,26 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   if (!results?.result || !visible) return null;
   
   // Check if there's chart data to display
-  const hasStandardChartData = results.result.chart && 
-    results.result.chart.data &&
-    !['knowledge_graph', 'causal_graph'].includes(results.result.chart.type || '');
-  
-  // Check if there's knowledge graph data
   const hasKnowledgeGraph = results.result.chart && 
     ['knowledge_graph', 'causal_graph'].includes(results.result.chart.type || '') && 
     results.result.chart.data;
 
+  // Check if there's time series data to display
+  const hasTimeSeriesChart = results.result.chart && 
+    results.result.chart.type === 'time_series' && 
+    results.result.chart.data;
+    
+  // Check if there's standard chart data to display (bar or pie)
+  const hasStandardChartData = results.result.chart && 
+    results.result.chart.data &&
+    !['knowledge_graph', 'causal_graph', 'time_series'].includes(results.result.chart.type || '');
+
   // Check if SQL data exists
-  const hasSqlData = results.result.sql && 
-    (results.result.sql.nodes_sql || results.result.sql.edges_sql);
+  const hasSqlData = results.result.sql;
 
   console.log("Chart type:", results.result.chart?.type);
   console.log("Knowledge graph data:", hasKnowledgeGraph, results.result.chart?.data);
+  console.log("Time series data:", hasTimeSeriesChart, results.result.chart?.data);
 
   // Format SQL for display
   const formatSql = (sql: string | undefined) => {
@@ -69,25 +74,12 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
         </DialogTrigger>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>SQL Queries</DialogTitle>
+            <DialogTitle>SQL Query</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 overflow-auto max-h-[60vh]">
-            {results.result.sql?.nodes_sql && (
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Nodes Query:</h3>
-                <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
-                  {results.result.sql.nodes_sql}
-                </pre>
-              </div>
-            )}
-            {results.result.sql?.edges_sql && (
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Edges Query:</h3>
-                <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
-                  {results.result.sql.edges_sql}
-                </pre>
-              </div>
-            )}
+            <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto whitespace-pre-wrap text-xs">
+              {typeof results.result.sql === 'string' ? results.result.sql : JSON.stringify(results.result.sql, null, 2)}
+            </pre>
           </div>
         </DialogContent>
       </Dialog>
@@ -121,7 +113,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
       </div>
 
       {/* Standard charts (bar, pie) */}
-      {!hasKnowledgeGraph && (
+      {(hasStandardChartData || hasTimeSeriesChart) && !hasKnowledgeGraph && (
         <div className="grid gap-3 grid-cols-1">
           {results.result.graph && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
@@ -139,6 +131,19 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
                 title="Analysis Chart"
                 subtitle="Visualized insights"
                 type={results.result.chart.type === 'pie' ? 'pie' : 'bar'}
+                data={results.result.chart.data}
+                height={350}
+                className="w-full"
+              />
+            </div>
+          )}
+
+          {hasTimeSeriesChart && (
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
+              <ChartCard
+                title="Time Series Analysis"
+                subtitle="Budget trends over time"
+                type="time_series"
                 data={results.result.chart.data}
                 height={350}
                 className="w-full"
