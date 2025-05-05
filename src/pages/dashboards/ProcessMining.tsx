@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +8,7 @@ import QuestionSelector from './components/QuestionSelector';
 import AnalysisResults from './components/AnalysisResults';
 
 const questions = [
+  "Show the connections between employees, their occupations, industries, skills, and locations?",
   "How training budgets have varied over the years and any correlation with increase or decrease in the training budget?",
   "Which job roles across sectors are at maximum risk of automation?",
   "What are the local authorities in England that are at higher risk of job automation than other places in England?",
