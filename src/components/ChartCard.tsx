@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -76,9 +75,8 @@ const ChartCard: React.FC<ChartCardProps> = ({
         const value = apiData.y[index] || 0;
         return {
           name: label || `Item ${index + 1}`,
-          // Store the raw value, don't multiply by 100 here - RankingChart will handle that
+          // Pass the raw value directly to RankingChart - it will handle the conversion
           value: value,
-          // We don't need originalValue anymore since we're passing the raw value directly
         };
       }).filter((item: any) => item.name !== 'null');
     }

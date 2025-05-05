@@ -7,7 +7,8 @@ import {
   YAxis,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Cell
 } from 'recharts';
 
 interface RankingChartProps {
@@ -87,7 +88,14 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
           name="Automation Risk"
           background={{ fill: '#f3f4f6' }}
           isAnimationActive={false}
-        />
+        >
+          {transformedData.map((entry, index) => (
+            <Cell 
+              key={`cell-${index}`}
+              fill="#8B5CF6"
+            />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
