@@ -74,7 +74,15 @@ export const createCompleteNodeSet = (nodes: Node[], edges: Edge[]): Node[] => {
     // Add all existing nodes
     nodes.forEach(node => {
       if (node && node.id) {
-        nodesMap.set(node.id, {...node});
+        // Make sure the node has a valid label
+        const label = typeof node.label === 'string' ? 
+          node.label : 
+          (typeof node.id === 'string' ? node.id : String(node.id));
+        
+        nodesMap.set(node.id, {
+          ...node,
+          label: label || String(node.id)
+        });
       }
     });
     
@@ -83,16 +91,16 @@ export const createCompleteNodeSet = (nodes: Node[], edges: Edge[]): Node[] => {
       if (edge.source && !nodesMap.has(edge.source)) {
         nodesMap.set(edge.source, {
           id: edge.source,
-          label: edge.source,
-          type: "Training Program" // Assuming missing nodes are training programs
+          label: String(edge.source),
+          type: "Entity"
         });
       }
       
       if (edge.target && !nodesMap.has(edge.target)) {
         nodesMap.set(edge.target, {
           id: edge.target,
-          label: edge.target,
-          type: "Difficulty Score"
+          label: String(edge.target),
+          type: "Entity"
         });
       }
     });
