@@ -45,6 +45,51 @@ const RankingChart: React.FC<RankingChartProps> = ({
     return null;
   };
 
+  // Custom tick component for YAxis to handle multi-line text
+  const CustomYAxisTick = (props: any) => {
+    const { x, y, payload } = props;
+    const value = payload.value;
+    
+    // Split long text into multiple lines
+    let lines = [value];
+    if (value.length > 30) {
+      const words = value.split(' ');
+      lines = [];
+      let currentLine = '';
+      
+      words.forEach(word => {
+        if ((currentLine + word).length < 30) {
+          currentLine += (currentLine ? ' ' : '') + word;
+        } else {
+          lines.push(currentLine);
+          currentLine = word;
+        }
+      });
+      
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    }
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        {lines.map((line, i) => (
+          <text 
+            key={i}
+            x={-10} 
+            y={i * 16} 
+            dy={5} 
+            textAnchor="end" 
+            fill="#666"
+            fontSize={12}
+          >
+            {line}
+          </text>
+        ))}
+      </g>
+    );
+  };
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
@@ -63,34 +108,9 @@ const RankingChart: React.FC<RankingChartProps> = ({
           type="category" 
           dataKey="name" 
           width={220}
-          tick={{ 
-            fontSize: 12,
-            width: 200,
-            lineHeight: "16px",
-            wordWrap: "break-word"
-          }}
+          tick={<CustomYAxisTick />}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(value) => {
-            // If value is longer than 30 chars, split it to multiple lines
-            if (value.length > 30) {
-              const words = value.split(' ');
-              let result = '';
-              let currentLine = '';
-              
-              words.forEach(word => {
-                if ((currentLine + word).length < 30) {
-                  currentLine += (currentLine ? ' ' : '') + word;
-                } else {
-                  result += (result ? '\n' : '') + currentLine;
-                  currentLine = word;
-                }
-              });
-              
-              return result + (currentLine ? '\n' + currentLine : '');
-            }
-            return value;
-          }}
         />
         <Tooltip content={<CustomTooltip />} />
         <Bar 
