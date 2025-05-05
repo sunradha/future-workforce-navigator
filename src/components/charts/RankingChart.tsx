@@ -18,7 +18,7 @@ interface RankingChartProps {
 }
 
 const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
-  // Transform the data to ensure values are properly displayed as percentages
+  // Transform the data to ensure values are properly displayed
   const transformedData = data.map(item => ({
     name: item.name,
     value: typeof item.value === 'number' 
@@ -28,21 +28,18 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
 
   console.log('RankingChart rendering with transformedData:', transformedData);
 
-  // Custom tooltip to display percentages
+  // Custom tooltip component
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-2 border border-gray-200 shadow-md rounded text-xs">
           <p className="font-semibold">{payload[0].payload.name}</p>
-          <p>{`Automation Risk: ${payload[0].value}%`}</p>
+          <p>{`Count: ${payload[0].value}`}</p>
         </div>
       );
     }
     return null;
   };
-
-  // Format X-axis ticks as percentages
-  const formatXAxis = (value: number) => `${value}%`;
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -54,9 +51,7 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
       >
         <XAxis 
           type="number" 
-          domain={[0, 100]} 
-          tickFormatter={formatXAxis}
-          ticks={[0, 20, 40, 60, 80, 100]}
+          domain={[0, 'dataMax']} 
         />
         <YAxis 
           type="category" 

@@ -39,6 +39,9 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
 
   // If we have a knowledge graph or no charts at all, don't render this section
   if (hasKnowledgeGraph || !hasAnyChart) return null;
+  
+  console.log("Chart data type:", results.result.chart?.type);
+  console.log("Chart data:", results.result.chart?.data);
 
   return (
     <div className="grid gap-3 grid-cols-1">
@@ -85,8 +88,8 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
       {hasRankingChart && (
         <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
           <ChartCard
-            title="Automation Risk by Area"
-            subtitle="Areas ranked by automation probability"
+            title="Skill Categories with High-Difficulty Programs"
+            subtitle="Categories ranked by number of difficult training programs"
             type="ranking"
             data={results.result.chart.data}
             height={550}
