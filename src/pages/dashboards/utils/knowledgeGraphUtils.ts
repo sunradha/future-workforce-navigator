@@ -130,13 +130,23 @@ export const validateEdges = (edges: Edge[], nodes: Node[]): Edge[] => {
     const sourceId = String(edge.source);
     const targetId = String(edge.target);
     
-    if (!nodeIds.has(sourceId) || !nodeIds.has(targetId)) {
-      console.warn(`Edge with invalid node references: ${sourceId} -> ${targetId}`);
+    if (!nodeIds.has(sourceId)) {
+      console.warn(`Edge with invalid source: ${sourceId}`);
+      return false;
+    }
+    
+    if (!nodeIds.has(targetId)) {
+      console.warn(`Edge with invalid target: ${targetId}`);
       return false;
     }
     
     return true;
   });
+  
+  if (validEdges.length !== edges.length) {
+    console.warn(`Filtered out ${edges.length - validEdges.length} invalid edges`);
+    console.warn("Valid node IDs:", Array.from(nodeIds));
+  }
   
   return validEdges;
 };

@@ -56,6 +56,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     
     if (validEdges.length === 0) {
       console.error("No valid edges found - all edges reference non-existent nodes");
+      console.error("Node IDs:", Array.from(nodeMap.keys()));
+      console.error("Edge sources/targets:", edges.map(e => `${e.source} -> ${e.target}`));
       
       // Draw unconnected nodes as fallback
       g.selectAll("circle")
@@ -65,7 +67,15 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .attr("r", 20)
         .attr("cx", (d, i) => 100 + (i * 150))
         .attr("cy", height / 2)
-        .attr("fill", "#3b82f6")
+        .attr("fill", d => {
+          // Color based on node type
+          switch(d.type) {
+            case "outcome": return "#ef4444"; // red
+            case "factor": return "#f59e0b";  // amber
+            case "intervention": return "#3b82f6"; // blue
+            default: return "#10b981"; // emerald
+          }
+        })
         .append("title")
         .text(d => cleanText(d.label));
       
@@ -82,8 +92,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     }
 
     // Create the graph simulation with improved parameters for causal graphs
-    const simulation = d3.forceSimulation()
-      .force("link", d3.forceLink()
+    const simulation = d3.forceSimulation(nodes as any)
+      .force("link", d3.forceLink(validEdges)
         .id((d: any) => d.id)
         .distance(150) // Increased distance for causal graphs
         .strength(1)
@@ -209,8 +219,12 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     node.append("title")
       .text((d: any) => `${cleanText(d.label)} (${cleanText(d.type) || "Unknown Type"})`);
 
-    simulation.nodes(nodes as any).on("tick", ticked);
+    simulation.nodes(nodes as any);
+    
+    // Update the simulation with the validEdges
     (simulation.force("link") as d3.ForceLink<any, any>).links(validEdges);
+    
+    simulation.on("tick", ticked);
 
     // Run the simulation with higher alpha for better initial layout
     simulation.alpha(1).restart();

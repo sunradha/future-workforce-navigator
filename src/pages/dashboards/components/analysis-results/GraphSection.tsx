@@ -41,10 +41,19 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
   };
 
   const chartData = results.result.chart.data;
+  
+  // Ensure we're getting the nodes and edges data correctly
   const nodes = chartData && chartData.nodes ? processNodes(chartData.nodes) : [];
   const edges = chartData && chartData.edges ? processEdges(chartData.edges) : [];
   
-  console.log("Processed graph data:", { nodes, edges });
+  // Debug the processed graph data
+  console.log("Processed graph data:", { 
+    chartType: results.result.chart.type,
+    nodes, 
+    edges,
+    originalNodes: chartData?.nodes,
+    originalEdges: chartData?.edges
+  });
   
   // Validate that we have valid nodes and edges
   const validGraph = nodes.length > 0 && edges.length > 0;
