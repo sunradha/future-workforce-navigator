@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -135,6 +134,19 @@ const ChartCard: React.FC<ChartCardProps> = ({
 
   // Format percentage values for ranking chart
   const formatPercentage = (value: number): string => {
+    // For ranking chart, we multiply by a factor of 100 for display
+    // We need to divide by 100 to get back to the original percentage
+    if (type === 'ranking') {
+      // Convert back to decimal form (0-1) and format as percentage
+      const percentage = value / 100;
+      
+      // Show more precision for smaller values
+      if (percentage < 0.01) {
+        return `${(percentage * 100).toFixed(3)}%`;
+      }
+      
+      return `${(percentage * 100).toFixed(0)}%`;
+    }
     return `${value.toFixed(0)}%`;
   };
 
@@ -205,6 +217,8 @@ const ChartCard: React.FC<ChartCardProps> = ({
                   domain={[0, 'dataMax']}
                   tickFormatter={formatPercentage}
                   tick={{ fontSize: 10 }}
+                  // Add more ticks to show better percentage distribution
+                  ticks={[0, 20, 40, 60, 80, 100]}
                 />
                 <YAxis 
                   dataKey="name"
@@ -217,7 +231,8 @@ const ChartCard: React.FC<ChartCardProps> = ({
                     // Use the original value for tooltip display
                     const item = chartData.find(item => item.value === value);
                     const originalValue = item?.originalValue ?? value;
-                    return [`${(originalValue * 100).toFixed(0)}%`, "Automation Risk"];
+                    // Format as percentage with proper precision
+                    return [`${(originalValue * 100).toFixed(1)}%`, "Automation Risk"];
                   }}
                   contentStyle={{ fontSize: '12px' }}
                 />
