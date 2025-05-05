@@ -39,17 +39,20 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
     results.result.chart.type === 'time_series' && 
     results.result.chart.data;
     
+  // Check if there's ranking data to display
+  const hasRankingChart = results.result.chart && 
+    results.result.chart.type === 'ranking' && 
+    results.result.chart.data;
+    
   // Check if there's standard chart data to display (bar or pie)
   const hasStandardChartData = results.result.chart && 
     results.result.chart.data &&
-    !['knowledge_graph', 'causal_graph', 'time_series'].includes(results.result.chart.type || '');
-
-  // Check if SQL data exists
-  const hasSqlData = results.result.sql;
+    !['knowledge_graph', 'causal_graph', 'time_series', 'ranking'].includes(results.result.chart.type || '');
 
   console.log("Chart type:", results.result.chart?.type);
   console.log("Knowledge graph data:", hasKnowledgeGraph, results.result.chart?.data);
   console.log("Time series data:", hasTimeSeriesChart, results.result.chart?.data);
+  console.log("Ranking data:", hasRankingChart, results.result.chart?.data);
 
   // Format SQL for display
   const formatSql = (sql: string | undefined) => {
@@ -58,7 +61,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
   };
 
   const renderSqlButton = () => {
-    if (!hasSqlData) return null;
+    if (!results.result.sql) return null;
     
     return (
       <Dialog>
@@ -113,7 +116,7 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
       </div>
 
       {/* Standard charts (bar, pie) */}
-      {(hasStandardChartData || hasTimeSeriesChart) && !hasKnowledgeGraph && (
+      {(hasStandardChartData || hasTimeSeriesChart || hasRankingChart) && !hasKnowledgeGraph && (
         <div className="grid gap-3 grid-cols-1">
           {results.result.graph && (
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
@@ -142,10 +145,23 @@ const AnalysisResults = ({ results, visible }: AnalysisResultsProps) => {
             <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
               <ChartCard
                 title="Time Series Analysis"
-                subtitle="Budget trends over time"
+                subtitle="Trends over time"
                 type="time_series"
                 data={results.result.chart.data}
                 height={350}
+                className="w-full"
+              />
+            </div>
+          )}
+          
+          {hasRankingChart && (
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
+              <ChartCard
+                title="Ranking Analysis"
+                subtitle="Ranked comparisons"
+                type="ranking"
+                data={results.result.chart.data}
+                height={500}  {/* Slightly taller to accommodate vertical bars */}
                 className="w-full"
               />
             </div>

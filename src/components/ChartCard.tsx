@@ -20,7 +20,7 @@ import { ChartData, BarData } from '@/types';
 interface ChartCardProps {
   title: string;
   subtitle?: string;
-  type: 'bar' | 'pie' | 'time_series';
+  type: 'bar' | 'pie' | 'time_series' | 'ranking';
   data: ChartData | BarData | any; // Allow for API response format
   colors?: string[];
   showLegend?: boolean;
@@ -95,6 +95,11 @@ const ChartCard: React.FC<ChartCardProps> = ({
     return value.toString();
   };
 
+  // Format percentage values for ranking chart
+  const formatPercentage = (value: number): string => {
+    return `${(value * 100).toFixed(0)}%`;
+  };
+
   return (
     <Card className={`overflow-hidden ${className}`}>
       <CardHeader className="pb-2 px-3 py-2">
@@ -104,27 +109,54 @@ const ChartCard: React.FC<ChartCardProps> = ({
       <CardContent className="p-0 w-full">
         <div style={{ width: '100%', height }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-            {type === 'bar' ? (
+            {type === 'bar' || type === 'ranking' ? (
               <RechartsBarChart 
                 data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
+                layout={type === 'ranking' ? 'vertical' : 'vertical'}
               >
-                <XAxis 
-                  dataKey="name" 
-                  angle={-35}
-                  textAnchor="end"
-                  height={60}
-                  tick={{ fontSize: 10 }}
-                  tickMargin={8}
+                {type === 'ranking' ? (
+                  <>
+                    <XAxis 
+                      type="number"
+                      tickFormatter={formatPercentage}
+                      tick={{ fontSize: 10 }}
+                    />
+                    <YAxis 
+                      type="category"
+                      dataKey="name"
+                      width={150}
+                      tick={{ fontSize: 10 }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <XAxis 
+                      dataKey="name" 
+                      angle={-35}
+                      textAnchor="end"
+                      height={60}
+                      tick={{ fontSize: 10 }}
+                      tickMargin={8}
+                    />
+                    <YAxis 
+                      width={40} 
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={formatYAxisTick}
+                    />
+                  </>
+                )}
+                <Tooltip 
+                  contentStyle={{ fontSize: '12px' }}
+                  formatter={type === 'ranking' ? formatPercentage : undefined}
                 />
-                <YAxis 
-                  width={40} 
-                  tick={{ fontSize: 10 }}
-                  tickFormatter={formatYAxisTick}
-                />
-                <Tooltip contentStyle={{ fontSize: '12px' }} />
                 {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                <Bar dataKey="value" fill={colors[0]} maxBarSize={50}>
+                <Bar 
+                  dataKey="value" 
+                  fill={colors[0]} 
+                  maxBarSize={50}
+                  minPointSize={2}
+                >
                   {chartData.map((entry: any, index: number) => (
                     <Cell 
                       key={`cell-${index}`} 
