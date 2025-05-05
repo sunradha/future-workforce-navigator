@@ -27,8 +27,14 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
     displayValue: item.value
   }));
   
+  // Format percentage values for axis
   const formatPercentage = (value: number): string => {
     return `${value}%`;
+  };
+
+  // Format tooltip percentage 
+  const formatTooltipPercentage = (value: number): string => {
+    return `${value.toFixed(0)}%`;
   };
 
   return (
@@ -36,9 +42,8 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
       <BarChart 
         data={transformedData}
         layout="horizontal"
-        margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
-        barGap={0}
-        barCategoryGap={1}
+        margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+        barSize={20}
       >
         <XAxis 
           type="number"
@@ -50,15 +55,11 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
         <YAxis 
           dataKey="name"
           type="category"
-          hide={true} // Hide to allow more space for bars
+          width={80}
+          tick={{ fontSize: 10 }}
         />
         <Tooltip 
-          formatter={(value) => [`${value}%`, "Automation Risk"]}
-          labelFormatter={(label) => {
-            // Find the entry with this name to display in tooltip
-            const entry = transformedData.find(item => item.name === label);
-            return entry ? entry.name : label;
-          }}
+          formatter={(value: number) => [formatTooltipPercentage(value), "Automation Risk"]}
           contentStyle={{ fontSize: '12px' }}
         />
         <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />
@@ -67,22 +68,7 @@ const RankingChart: React.FC<RankingChartProps> = ({ data, height = 350 }) => {
           fill="#8B5CF6" 
           name="Automation Risk"
           background={{ fill: '#f3f4f6' }}
-          barSize={16}
           isAnimationActive={false}
-          label={(props) => {
-            const { x, y, width, height, value, name } = props;
-            return (
-              <text 
-                x={x - 5} 
-                y={y + height / 2} 
-                dy={4}
-                textAnchor="end"
-                fontSize={10}
-              >
-                {name}
-              </text>
-            );
-          }}
         />
       </BarChart>
     </ResponsiveContainer>

@@ -16,6 +16,7 @@ import {
   YAxis,
 } from 'recharts';
 import { ChartData, BarData } from '@/types';
+import RankingChart from './charts/RankingChart';
 
 interface ChartCardProps {
   title: string;
@@ -75,8 +76,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
         return {
           name: label || `Item ${index + 1}`,
           value: Math.round(value * 100), // Convert 0.72 to 72 for display
-          // Store the original decimal value (0.72) for tooltip
-          originalValue: value
+          originalValue: value // Store the original decimal value
         };
       }).filter((item: any) => item.name !== 'null');
     }
@@ -129,22 +129,6 @@ const ChartCard: React.FC<ChartCardProps> = ({
     return value.toString();
   };
 
-  // Format percentage values for ranking chart
-  const formatPercentage = (value: number): string => {
-    return `${value}%`;
-  };
-
-  // Calculate the appropriate left margin for ranking charts to accommodate labels
-  const getMargin = () => {
-    if (type === 'ranking') {
-      // Minimal left margin to show more of the bars
-      return { top: 5, right: 30, left: 5, bottom: 5 };
-    } else if (type === 'comparative_bar') {
-      return { top: 10, right: 30, left: 0, bottom: 100 }; 
-    }
-    return { top: 10, right: 10, left: 0, bottom: 35 };
-  };
-
   console.log("ChartCard rendering with type:", type, "and data:", chartData);
 
   return (
@@ -190,68 +174,11 @@ const ChartCard: React.FC<ChartCardProps> = ({
                 </Bar>
               </RechartsBarChart>
             ) : type === 'ranking' ? (
-              <RechartsBarChart 
-                data={chartData}
-                margin={getMargin()}
-                layout="horizontal"
-                barGap={0}
-                barCategoryGap={1}
-              >
-                <XAxis 
-                  type="number"
-                  domain={[0, 100]}
-                  ticks={[0, 20, 40, 60, 80, 100]}
-                  tickFormatter={formatPercentage}
-                  tick={{ fontSize: 10 }}
-                />
-                <YAxis 
-                  dataKey="name"
-                  type="category"
-                  hide={true} // Hide the axis to allow more space for bars
-                />
-                <Tooltip 
-                  formatter={(value, name, props) => {
-                    // Display original value as percentage
-                    const item = chartData.find((item: any) => item.value === value);
-                    const originalValue = item?.originalValue ?? (value / 100);
-                    return [`${(originalValue * 100).toFixed(0)}%`, "Automation Risk"];
-                  }}
-                  labelFormatter={(label) => {
-                    // Find the entry with this name to display in tooltip
-                    const entry = chartData.find((item: any) => item.name === label);
-                    return entry ? entry.name : label;
-                  }}
-                  contentStyle={{ fontSize: '12px' }}
-                />
-                {showLegend && <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />}
-                <Bar 
-                  dataKey="value" 
-                  fill="#8B5CF6" 
-                  name="Automation Risk"
-                  background={{ fill: '#f3f4f6' }}
-                  barSize={16}
-                  isAnimationActive={false} // Disable animation
-                  label={(props) => {
-                    const { x, y, width, height, value, name } = props;
-                    // Position label to the left of the bar
-                    return (
-                      <text 
-                        x={x - 5} 
-                        y={y + height / 2} 
-                        dy={4}
-                        textAnchor="end"
-                        fontSize={10}
-                      >
-                        {name}
-                      </text>
-                    );
-                  }}
-                />
-              </RechartsBarChart>
+              <RankingChart data={chartData} height={height} />
             ) : type === 'comparative_bar' ? (
               <RechartsBarChart 
                 data={chartData}
-                margin={getMargin()}
+                margin={{ top: 10, right: 30, left: 0, bottom: 100 }}
                 layout="vertical"
                 barGap={5}
               >
