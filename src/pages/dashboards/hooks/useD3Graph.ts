@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Node, Edge } from '../types/knowledgeGraphTypes';
@@ -403,28 +404,36 @@ export const useD3Graph = ({
         .translate(-width/2, -height/2)
     );
     
-    // Drag functions with proper typing - FIXED: Allow individual node dragging
+    // Key fix: Modify the drag functions to prevent propagation and allow individual node dragging
     function dragstarted(event: d3.D3DragEvent<SVGGElement, any, any>) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       
       // Fix only the dragged node's position
-      event.subject.fx = event.subject.x;
-      event.subject.fy = event.subject.y;
+      if (event.subject) {
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+      }
       
-      // Stop propagation to prevent the zoom behavior from interfering
-      event.sourceEvent.stopPropagation();
+      // Critical fix: Stop propagation to prevent the zoom behavior from interfering
+      if (event.sourceEvent) {
+        event.sourceEvent.stopPropagation();
+      }
     }
     
     function dragged(event: d3.D3DragEvent<SVGGElement, any, any>) {
       // Update only the dragged node's position
-      event.subject.fx = event.x;
-      event.subject.fy = event.y;
+      if (event.subject) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+      }
       
-      // Update the graph immediately to show the node movement
+      // Update the graph immediately to show the node movement in real-time
       updatePositions();
       
-      // Stop propagation to prevent the zoom behavior from interfering
-      event.sourceEvent.stopPropagation();
+      // Critical fix: Stop propagation to prevent the zoom behavior from interfering
+      if (event.sourceEvent) {
+        event.sourceEvent.stopPropagation();
+      }
     }
     
     function dragended(event: d3.D3DragEvent<SVGGElement, any, any>) {
@@ -433,8 +442,10 @@ export const useD3Graph = ({
       // Keep the node position fixed where it was dropped
       // Do NOT reset fx/fy to null - this would make the node float back
       
-      // Stop propagation to prevent the zoom behavior from interfering
-      event.sourceEvent.stopPropagation();
+      // Critical fix: Stop propagation to prevent the zoom behavior from interfering
+      if (event.sourceEvent) {
+        event.sourceEvent.stopPropagation();
+      }
     }
     
     // Helper functions for formatting labels
