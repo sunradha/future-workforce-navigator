@@ -24,7 +24,9 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
     return nodes.map(node => ({
       ...node,
       id: String(node.id),
+      // Use consistent labels
       label: typeof node.label === 'string' ? node.label : String(node.id),
+      // Normalize type field
       type: typeof node.type === 'string' ? node.type.toLowerCase() : 'entity'
     }));
   };
@@ -55,12 +57,22 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
     originalEdges: chartData?.edges
   });
 
+  // Limit nodes to a reasonable number for performance if too many
+  const nodeLimit = 50;
+  const displayNodes = nodes.length > nodeLimit ? nodes.slice(0, nodeLimit) : nodes;
+  
+  // Filter edges to only include those connecting displayed nodes
+  const displayNodeIds = new Set(displayNodes.map(n => n.id));
+  const displayEdges = edges.filter(edge => 
+    displayNodeIds.has(edge.source) && displayNodeIds.has(edge.target)
+  );
+
   return (
     <div className="space-y-6">
       <KnowledgeGraph 
         title={results.result.chart.type === 'knowledge_graph' ? 'Knowledge Graph' : 'Causal Graph'}
-        nodes={nodes}
-        edges={edges}
+        nodes={displayNodes}
+        edges={displayEdges}
         height={550}
       />
     </div>

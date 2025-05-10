@@ -1,4 +1,3 @@
-
 import * as d3 from 'd3';
 import { Node } from '../../types/knowledgeGraphTypes';
 
@@ -16,7 +15,7 @@ export const useNodeRenderer = (
   simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>,
   cleanTextFn: (text: any) => string
 ) => {
-  // Color scale for node types
+  // Enhanced color scale for node types with better visibility
   const color = d3.scaleOrdinal<string>()
     .domain(["outcome", "factor", "intervention", "entity", "Entity"])
     .range(["#ef4444", "#f59e0b", "#3b82f6", "#10b981", "#8B5CF6"]);
@@ -33,60 +32,76 @@ export const useNodeRenderer = (
       .on("drag", (event) => dragged(event))
       .on("end", (event) => dragended(event, simulation)));
 
-  // Add node circles
+  // Add a white background circle for better text readability
+  nodeGroup.append("circle")
+    .attr("r", 30) // Larger radius for better text containment
+    .attr("fill", "white")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 2);
+  
+  // Add colored node circles
   const node = nodeGroup.append("circle")
-    .attr("r", 25) // Increased radius for better visibility
+    .attr("r", 28) // Slightly smaller than the background for a border effect
     .attr("fill", (d: any): string => {
       // Get color based on node type, with proper type casting
       const nodeType = d.type ? cleanTextFn(d.type).toLowerCase() : "entity";
       return color(nodeType);
     })
     .attr("stroke", "#fff")
-    .attr("stroke-width", 2);
+    .attr("stroke-width", 0.5)
+    .attr("opacity", 0.85); // Slightly transparent for better text visibility
 
-  // Add node labels
+  // Add node labels with proper text wrapping
   const nodeLabels = nodeGroup.append("text")
-    .text((d: any) => cleanTextFn(d.label))
-    .attr("font-size", "12px")
-    .attr("font-weight", "bold")
-    .attr("dx", 0)
-    .attr("dy", 0) // Center text in the node
     .attr("text-anchor", "middle")
-    .attr("dominant-baseline", "middle") // Vertically center text
-    .attr("fill", "#fff") // White text for better visibility
+    .attr("dominant-baseline", "middle")
+    .attr("font-size", "10px") // Smaller font for better fit
+    .attr("font-weight", "bold")
+    .attr("fill", "#fff") // White text for better visibility on colored nodes
+    .attr("pointer-events", "none") // Allow clicks to pass through to the node
     .each(function(d: any) {
-      // Wrap long text labels
-      const text = d3.select(this);
-      const words = cleanTextFn(d.label).split(/\s+/);
-      const lineHeight = 1.1; // ems
+      // Get the text content
+      const label = cleanTextFn(d.label);
+      const words = label.split(/\s+/).filter(Boolean);
       
-      // Clear initial text
-      text.text(null);
-      
-      if (words.length === 1) {
-        // For single words, just set the text
-        text.append("tspan")
+      // For very short labels (single word)
+      if (words.length === 1 && label.length < 12) {
+        d3.select(this).append("tspan")
           .attr("x", 0)
           .attr("y", 0)
-          .text(words[0]);
-      } else {
-        // For multiple words, wrap on two lines
-        const firstLine = words.slice(0, Math.ceil(words.length / 2)).join(" ");
-        const secondLine = words.slice(Math.ceil(words.length / 2)).join(" ");
-        
-        text.append("tspan")
-          .attr("x", 0)
-          .attr("y", -6)
-          .text(firstLine);
-        
-        text.append("tspan")
-          .attr("x", 0)
-          .attr("y", 6)
-          .text(secondLine);
+          .text(label);
+        return;
       }
+      
+      // For longer labels, wrap text
+      // Calculate how many words per line based on length
+      const wordsPerLine = words.length <= 3 ? Math.ceil(words.length / 2) : Math.ceil(words.length / 3);
+      
+      // Split into lines of roughly equal word counts
+      const lines: string[] = [];
+      for (let i = 0; i < words.length; i += wordsPerLine) {
+        lines.push(words.slice(i, i + wordsPerLine).join(" "));
+      }
+      
+      // If we have too many lines, limit to 2 or 3
+      const displayLines = lines.slice(0, 3);
+      if (lines.length > 3) {
+        displayLines[2] = displayLines[2] + "...";
+      }
+      
+      // Apply the lines to the text element with proper spacing
+      displayLines.forEach((line, i) => {
+        const lineHeight = 12; // pixels between lines
+        const yPos = (i - (displayLines.length - 1) / 2) * lineHeight;
+        
+        d3.select(this).append("tspan")
+          .attr("x", 0)
+          .attr("y", yPos)
+          .text(line);
+      });
     });
 
-  // Add tooltips for nodes
+  // Add tooltips for nodes with full label text
   node.append("title")
     .text((d: any) => `${cleanTextFn(d.label)} (${cleanTextFn(d.type) || "Entity"})`);
 
@@ -115,8 +130,6 @@ export const dragended = (
   simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>
 ) => {
   if (!event.active) simulation.alphaTarget(0);
-  // Fixed positions are maintained to make the graph more stable
-  // Uncomment the lines below if you want nodes to return to free-floating state
-  // event.subject.fx = null;
-  // event.subject.fy = null;
+  // Keep positions fixed to improve graph stability
+  // This prevents nodes from moving around after user interaction
 };

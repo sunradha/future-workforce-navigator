@@ -34,6 +34,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     const { svg, g, containerWidth } = setupResult;
     
     // Validate edges against nodes
+    console.log("Validating", edges.length, "edges against", nodes.length, "nodes");
+    console.log("Node IDs:", nodes.map(n => n.id));
     const validEdges = validateEdges(edges, nodes);
     
     console.log("Valid edges for rendering:", validEdges.length);
@@ -52,21 +54,33 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       containerWidth / 2, 
       height / 2,
       {
-        linkDistance: 250, // Increased for knowledge graphs
-        chargeStrength: -1000, // Stronger repulsion
-        collideRadius: 120 // Larger collision radius
+        linkDistance: 200, // Increased for knowledge graphs
+        chargeStrength: -800, // Stronger repulsion
+        collideRadius: 60 // Larger collision radius
       }
     );
     
     // Render edges and their labels
-    const { link, linkLabels } = useEdgeRenderer(g, svg, validEdges, cleanText);
+    const { link, linkBg, linkLabels } = useEdgeRenderer(g, svg, validEdges, cleanText);
     
     // Render nodes and their labels
     const { nodeGroup } = useNodeRenderer(g, nodes, simulation, cleanText);
     
     // Setup the tick function to update positions on each simulation step
     simulation.on("tick", () => {
-      // Update link paths for curved edges
+      // Update link background paths
+      linkBg.attr("d", (d: any) => {
+        // Get source and target coordinates
+        const sourceX = d.source.x || 0;
+        const sourceY = d.source.y || 0;
+        const targetX = d.target.x || 0;
+        const targetY = d.target.y || 0;
+        
+        // Use straight lines for better readability
+        return `M${sourceX},${sourceY} L${targetX},${targetY}`;
+      });
+      
+      // Update link paths for straight edges (more readable for knowledge graphs)
       link.attr("d", (d: any) => {
         // Get source and target coordinates
         const sourceX = d.source.x || 0;
@@ -74,20 +88,11 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         const targetX = d.target.x || 0;
         const targetY = d.target.y || 0;
         
-        const dx = targetX - sourceX;
-        const dy = targetY - sourceY;
-        const dr = Math.sqrt(dx * dx + dy * dy) * 1.5; // More curved lines
-        
-        // Direct path for self-loops
-        if (d.source === d.target) {
-          return `M${sourceX},${sourceY} A1,1 0 0,1 ${targetX},${targetY}`;
-        }
-        
-        // Curved path for normal links - use a smoother curve
-        return `M${sourceX},${sourceY} A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
+        // Use straight lines for knowledge graphs
+        return `M${sourceX},${sourceY} L${targetX},${targetY}`;
       });
 
-      // Update link label positions to be at the midpoint
+      // Update link label positions to be at the midpoint with offset
       linkLabels
         .attr("x", (d: any) => {
           const sourceX = d.source.x || 0;
@@ -97,7 +102,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .attr("y", (d: any) => {
           const sourceY = d.source.y || 0;
           const targetY = d.target.y || 0;
-          return (sourceY + targetY) / 2 - 10; // Position labels above the line
+          return (sourceY + targetY) / 2 - 8; // Position labels above the line
         });
 
       // Update node group positions
@@ -115,7 +120,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     svg.call(zoomHandler);
     
     // Initial zoom to fit the graph better for knowledge graphs
-    const initialZoom = 0.8; // Zoom out more
+    const initialZoom = 0.7; // Zoom out to see the whole graph
     const initialTransform = d3.zoomIdentity
       .translate(containerWidth / 2, height / 2)
       .scale(initialZoom)
@@ -136,14 +141,14 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     window.addEventListener("resize", handleResize);
 
-    // Start simulation with higher alpha for better initial layout
+    // Run the simulation longer for knowledge graphs for better layout
     simulation.alpha(1).restart();
     
-    // Run the simulation longer for knowledge graphs for better layout
+    // Stop the simulation after a while to save resources
     setTimeout(() => {
       simulation.stop();
       console.log('Stopped simulation to save resources');
-    }, 5000); // Increased from 3000 to 5000 ms
+    }, 5000);
 
     return () => {
       simulation.stop();
