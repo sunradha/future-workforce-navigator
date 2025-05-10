@@ -97,11 +97,11 @@ const KnowledgeGraph = ({
         </span>
       </div>
       
-      <div className="w-full overflow-hidden rounded-md bg-gray-900" style={{ height: `${height}px` }}>
+      <div className="w-full overflow-hidden rounded-md bg-gray-100" style={{ height: `${height}px` }}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-            <span className="ml-2 text-sm text-gray-100">Initializing graph...</span>
+            <span className="ml-2 text-sm text-gray-700">Initializing graph...</span>
           </div>
         ) : (
           <svg 

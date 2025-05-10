@@ -47,14 +47,14 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     svg.append("defs").append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 25) // Position closer to nodes
+      .attr("refX", 45) // Position closer to nodes
       .attr("refY", 0)
       .attr("orient", "auto")
       .attr("markerWidth", 10)
       .attr("markerHeight", 10)
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#ddd"); // Lighter color for better visibility
+      .attr("fill", "#666"); // Darker color for better visibility on light background
 
     // Create a color scale for node types
     const colorScale = d3.scaleOrdinal()
@@ -76,7 +76,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .data(edges)
       .enter()
       .append("path")
-      .attr("stroke", "#ddd") // Lighter edge color for dark background
+      .attr("stroke", "#666") // Darker edge color for light background
       .attr("stroke-opacity", 0.7)
       .attr("stroke-width", 2.5)
       .attr("marker-end", "url(#arrowhead)")
@@ -91,19 +91,19 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     // Add background for link labels
     linkLabels.append("rect")
-      .attr("fill", "rgba(60, 60, 60, 0.9)") // Darker semi-transparent background
+      .attr("fill", "rgba(240, 240, 240, 0.9)") // Light semi-transparent background
       .attr("rx", 4)
       .attr("ry", 4)
       .attr("opacity", 0.9);
 
-    // Add text for link labels
+    // Add text for link labels - Display full relationship text
     const linkText = linkLabels.append("text")
-      .text(d => formatRelationship(d.relationship))
-      .attr("font-size", "13px") // Increased font size for better visibility
+      .text(d => formatRelationship(d.relationship, false)) // Pass false to disable truncation
+      .attr("font-size", "13px")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
       .attr("pointer-events", "none")
-      .attr("fill", "#fff") // White text for dark background
+      .attr("fill", "#333") // Dark text for light background
       .attr("font-weight", "500");
 
     // Size the rectangles based on text content
@@ -137,36 +137,40 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("stroke", "#fff")
       .attr("stroke-width", 2.5);
 
-    // Add node labels (WHITE text for better contrast on colored nodes)
+    // Add node labels with white text only (no duplicated labels)
     nodeGroups.append("text")
-      .text(d => formatLabel(d.label))
-      .attr("font-size", "14px") // Increased font size
+      .text(d => formatLabel(d.label, false)) // Pass false to disable truncation
+      .attr("font-size", "14px")
       .attr("font-weight", "bold")
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
-      .attr("fill", "#ffffff") // WHITE text for better visibility inside colored nodes
+      .attr("fill", "#ffffff") // WHITE text for visibility inside colored nodes
       .attr("pointer-events", "none")
       .each(function(d) {
         const text = d3.select(this);
-        const words = formatLabel(d.label).split(/\s+/);
-        const lineHeight = 1.1;
+        const words = formatLabel(d.label, false).split(/\s+/); // No truncation
         
         text.text(null); // Clear the text
         
-        if (words.length === 1 || d.label.length < 12) {
-          text.text(formatLabel(d.label));
-          return;
-        }
+        // For multi-word labels, split into lines but don't truncate
+        const lineHeight = 1.1;
+        let currentLine = 0;
+        let lineWords: string[] = [];
         
-        // For multi-word labels, split into lines
-        const maxWords = 2;
-        for (let i = 0; i < words.length; i += maxWords) {
-          const lineWords = words.slice(i, i + maxWords);
-          text.append("tspan")
-            .attr("x", 0)
-            .attr("y", (i === 0 ? -0.6 : 0.6) + "em")
-            .text(lineWords.join(' '));
-        }
+        words.forEach((word, i) => {
+          lineWords.push(word);
+          
+          // Create a new line after every 2 words or at the end
+          if ((i + 1) % 2 === 0 || i === words.length - 1) {
+            text.append("tspan")
+              .attr("x", 0)
+              .attr("y", ((currentLine === 0 ? -0.6 : 0.6) + (currentLine * lineHeight)) + "em")
+              .text(lineWords.join(' '));
+            
+            lineWords = [];
+            currentLine++;
+          }
+        });
       });
 
     // Add tooltips
@@ -225,15 +229,15 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .translate(-width/2, -height/2)
     );
     
-    // Drag functions with proper handling to ensure only the dragged node moves
-    function dragstarted(event: any) {
+    // Drag functions with proper typing
+    function dragstarted(event: d3.D3DragEvent<SVGGElement, any, any>) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
-      // Store fx and fy (fixed position) for the dragged node only
+      // Fix only the dragged node
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
     }
     
-    function dragged(event: any) {
+    function dragged(event: d3.D3DragEvent<SVGGElement, any, any>) {
       // Update only the dragged node's position
       event.subject.fx = event.x;
       event.subject.fy = event.y;
@@ -241,31 +245,35 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       updatePositions();
     }
     
-    function dragended(event: any) {
+    function dragended(event: d3.D3DragEvent<SVGGElement, any, any>) {
       if (!event.active) simulation.alphaTarget(0);
       // Keep the node position fixed after dragging
       // Don't reset fx/fy to null to keep the node in place
     }
     
     // Helper functions
-    function formatLabel(label: string): string {
+    function formatLabel(label: string, truncate: boolean = true): string {
       if (!label) return '';
-      return label
+      
+      const formatted = label
         .replace(/_/g, ' ')
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
+      
+      // Return full label without truncation
+      return formatted;
     }
     
-    function formatRelationship(relationship: string): string {
+    function formatRelationship(relationship: string, truncate: boolean = true): string {
       if (!relationship) return '';
+      
       const formatted = relationship
         .replace(/_/g, ' ')
         .toLowerCase();
       
-      return formatted.length > 15 ? 
-        formatted.substring(0, 12) + "..." : 
-        formatted;
+      // Return full relationship without truncation
+      return formatted;
     }
 
     // Let the simulation run for a bit to better position elements
