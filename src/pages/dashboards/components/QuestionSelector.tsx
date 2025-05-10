@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -11,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Layers, GitGraph, FlowArrow, BarChart2 } from 'lucide-react';
+import { Layers, GitGraph, ArrowRight, BarChart2 } from 'lucide-react';
 
 interface QuestionSelectorProps {
   loading: boolean;
@@ -75,7 +74,7 @@ const QuestionSelector = ({
               <span>Causal Graph</span>
             </TabsTrigger>
             <TabsTrigger value="processMining" className="flex items-center gap-1">
-              <FlowArrow className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4" />
               <span>Process Flow</span>
             </TabsTrigger>
             <TabsTrigger value="generalAnalytics" className="flex items-center gap-1">
