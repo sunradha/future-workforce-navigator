@@ -55,35 +55,16 @@ export const transformApiData = (apiData: any, chartType: string): any[] => {
       .filter((item: any) => item.name && item.name !== 'null');
   }
 
-  // Handle time series data format
-  if (apiData && apiData.x && apiData.y) {
+  // Handle time series data format with x and y arrays
+  if (apiData && apiData.x && apiData.y && chartType === 'time_series') {
     console.log('Transforming time series data:', apiData);
     
-    // For time series in the format provided by the API
-    const transformedData = [];
-    
-    // Create pairs of year, sector, and value (which we need to add from a third array if present)
-    for (let i = 0; i < apiData.x.length && i < apiData.y.length; i++) {
-      const year = apiData.x[i];
-      const sector = apiData.y[i];
-      
-      // Skip entries with null/undefined or "Total" sector
-      if (!year || !sector || sector === "Total") continue;
-      
-      // Get the value from a third array if present, otherwise use a default
-      const value = apiData.values && apiData.values[i] ? apiData.values[i] : 
-                   (apiData.total_investment && apiData.total_investment[i] ? apiData.total_investment[i] : 
-                   // Generate a random value between 50M and 100M for testing if no value provided
-                   Math.round(Math.random() * 50000000 + 50000000));
-      
-      transformedData.push({
-        year: year,
-        sector: sector,
-        value: value
-      });
-    }
-    
-    return transformedData;
+    // For time series in the format provided by the API (x and y arrays)
+    return apiData.x.map((year: string, index: number) => ({
+      year: year,
+      sector: 'Total',
+      value: apiData.y[index] || 0
+    }));
   }
 
   // Handle the API response format where data has x, y, labels

@@ -27,13 +27,38 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 }) => {
   console.log("TimeSeriesChart rendering with data:", data);
 
+  // Transform the data if it's not in the expected format
+  const chartData = React.useMemo(() => {
+    // If data is already in the correct array format, return it
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+      return data;
+    }
+
+    // Handle the case where data is in the format from the API with x and y arrays
+    if (data && data.x && Array.isArray(data.x) && data.y && Array.isArray(data.y)) {
+      // Create transformed data points combining x and y values
+      const transformedData = data.x.map((xValue, index) => ({
+        year: xValue,
+        sector: 'Total',
+        value: data.y[index]
+      }));
+      
+      return transformedData;
+    }
+    
+    console.error("Unsupported data format for TimeSeriesChart:", data);
+    return [];
+  }, [data]);
+  
+  console.log("Processed chart data:", chartData);
+
   // Group data by sector to create multiple lines
-  const sectors = [...new Set(data.map(item => item.sector))];
+  const sectors = [...new Set(chartData.map(item => item.sector))];
   
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart
-        data={data}
+        data={chartData}
         margin={{ top: 10, right: 30, left: 0, bottom: 35 }}
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -59,7 +84,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
             key={sector}
             type="monotone"
             dataKey="value"
-            data={data.filter(item => item.sector === sector)}
+            data={chartData.filter(item => item.sector === sector)}
             name={sector}
             stroke={colors[index % colors.length]}
             strokeWidth={2}
