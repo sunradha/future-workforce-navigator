@@ -24,11 +24,18 @@ const questionsByCategory = {
     "What is the typical progression through training programs?"
   ],
   generalAnalytics: [
-    "How have training budgets varied over the years? Is there a trend of increase or decrease?",
-    "Which training programs were considered the most successful or effective, and why?",
-    "Which training programs received the best feedback from employees?",
-    "Which training programs were perceived by employees to offer the most benefit?",
-    "Which skill categories need prioritization to improve employees' ability to perform their jobs across sectors?"
+    "How training budgets have varied over the years and any correlation with increase or decrease in the training budget?",
+    "Which job roles across sectors are at maximum risk of automation?",
+    "What are the local authorities in England that are at higher risk of job automation than other places in England?",
+    "Which training programs were deemed more successful or effective than others and why?",
+    "Which skills need prioritization to improve the skill levels of employees to perform their jobs across different sectors?",
+    "Evaluate the performance of all training programs conducted in the last one year.",
+    "Which training programs were having high level of difficulty or perceived difficulty by employees?",
+    "Which skill categories lead to the most high-difficulty programs?",
+    "Which employees struggled across multiple programs?",
+    "Which training programs should be prioritised to address risk of automation to jobs across industries?",
+    "Which training program was most popular with employees across industries?",
+    "Which training program has received best feedback from employees?"
   ]
 };
 
