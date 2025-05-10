@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Node, Edge } from '../types/knowledgeGraphTypes';
@@ -99,11 +98,11 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Add text for link labels
     const linkText = linkLabels.append("text")
       .text(d => formatRelationship(d.relationship))
-      .attr("font-size", "12px") // Increased font size
+      .attr("font-size", "13px") // Increased font size for better visibility
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
       .attr("pointer-events", "none")
-      .attr("fill", "#333")
+      .attr("fill", "#000") // Black text for better visibility
       .attr("font-weight", "500");
 
     // Size the rectangles based on text content
@@ -128,7 +127,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .on("drag", dragged)
         .on("end", dragended));
 
-    // Add node circles - explicit typing for the fill attribute
+    // Add node circles with explicit typing for the fill attribute
     nodeGroups.append("circle")
       .attr("r", 45) // Increased node size
       .attr("fill", function(d: Node) {
@@ -173,6 +172,12 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     nodeGroups.append("title")
       .text(d => `${d.label} (${d.type || 'Entity'})`);
 
+    // Run the simulation for a number of iterations to position nodes before first render
+    // This ensures initial positions are calculated before display
+    for (let i = 0; i < 150; i++) {
+      simulation.tick();
+    }
+    
     // Update positions on tick
     simulation.on("tick", () => {
       // Constrain nodes to the SVG bounds
@@ -207,12 +212,6 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     });
     
-    // Fix: Initialize the graph with visible positioning and manual simulation steps
-    // Run the simulation for a few iterations to position nodes before first render
-    for (let i = 0; i < 100; i++) {
-      simulation.tick();
-    }
-    
     // Immediately apply positions after simulation
     // Update link positions
     link.attr("d", (d: any) => {
@@ -238,20 +237,19 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Update node positions
     nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     
-    // Center and fit the graph with a slight delay to ensure all elements are rendered
+    // Stop the simulation after initial positioning - the graph is now static until drag events
+    simulation.stop();
+    
+    // Apply initial zoom to ensure everything is visible
     setTimeout(() => {
-      // Apply initial zoom that makes everything visible
-      const initialScale = 0.8;
+      const initialScale = 0.85; // Slightly zoomed out to show the whole graph
       svg.call(zoom.transform as any, 
         d3.zoomIdentity
           .translate(width/2, height/2)
           .scale(initialScale)
           .translate(-width/2, -height/2)
       );
-      
-      // Stop the simulation after initial positioning
-      simulation.stop();
-    }, 100);
+    }, 50);
     
     // Drag functions
     function dragstarted(event: any) {
