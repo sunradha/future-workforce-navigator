@@ -8,9 +8,17 @@ interface UseD3GraphProps {
   edges: Edge[];
   height: number;
   darkMode?: boolean;
+  colorScale?: Record<string, string>;  // Added colorScale parameter
 }
 
-export const useD3Graph = ({ svgRef, nodes, edges, height, darkMode = false }: UseD3GraphProps) => {
+export const useD3Graph = ({ 
+  svgRef, 
+  nodes, 
+  edges, 
+  height, 
+  darkMode = false,
+  colorScale = {} 
+}: UseD3GraphProps) => {
   const renderGraph = useCallback(() => {
     if (!svgRef.current || !nodes.length) {
       console.log("No SVG ref or nodes to render");
@@ -57,10 +65,23 @@ export const useD3Graph = ({ svgRef, nodes, edges, height, darkMode = false }: U
       .attr("d", "M0,-5L10,0L0,5")
       .attr("fill", darkMode ? "#FFFFFF" : "#666"); // White arrows in dark mode
 
-    // Create a color scale for node types
-    const colorScale = d3.scaleOrdinal()
-      .domain(['entity', 'employee', 'occupation', 'industry', 'training', 'reskilling_case', 'reskilling_event', 'skill', 'location'])
-      .range(['#8B5CF6', '#F59E0B', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#F97316', '#F59E0B', '#8B5CF6']);
+    // Create a color scale for node types - use custom colors if provided
+    const defaultColorScale = d3.scaleOrdinal()
+      .domain(['entity', 'employee', 'occupation', 'industry', 'training', 'reskilling_case', 'reskilling_event', 'skill', 'location', 'process', 'start', 'certification', 'outcome', 'transition'])
+      .range(['#8B5CF6', '#F59E0B', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#F97316', '#F59E0B', '#8B5CF6', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899']);
+
+    // Function to determine color for a node
+    const getNodeColor = (node: Node): string => {
+      const nodeType = node.type || 'entity';
+      // If a custom color is provided for this type, use it; otherwise use default scale
+      if (colorScale && colorScale[nodeType]) {
+        return colorScale[nodeType];
+      }
+      if (colorScale && colorScale['default']) {
+        return colorScale['default'];
+      }
+      return defaultColorScale(nodeType) as string;
+    };
 
     // Create the simulation with increased repulsion strength
     const simulation = d3.forceSimulation(nodes as any)
@@ -129,11 +150,11 @@ export const useD3Graph = ({ svgRef, nodes, edges, height, darkMode = false }: U
         .on("drag", dragged)
         .on("end", dragended));
 
-    // Add node circles with explicit typing for the fill attribute
+    // Add node circles with explicit typing for the fill attribute - updated to use custom colors
     nodeGroups.append("circle")
       .attr("r", 45) // Increased node size
       .attr("fill", function(d: Node) {
-        return colorScale(d.type || 'entity') as string;
+        return getNodeColor(d);
       })
       .attr("stroke", darkMode ? "#FFFFFF" : "#fff") // White stroke in dark mode
       .attr("stroke-width", 2);
@@ -290,7 +311,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height, darkMode = false }: U
     // Log successful rendering
     console.log("Graph rendered successfully with", nodes.length, "nodes and", edges.length, "edges");
     
-  }, [svgRef, nodes, edges, height, darkMode]);
+  }, [svgRef, nodes, edges, height, darkMode, colorScale]);
 
   useEffect(() => {
     console.log("useD3Graph effect triggered, nodes:", nodes.length);

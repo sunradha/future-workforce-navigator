@@ -8,6 +8,18 @@ interface ProcessGraphProps {
   title?: string;
 }
 
+// Define color palette for different process node types
+const NODE_COLORS = {
+  'start': '#10b981',         // Green for starting nodes
+  'training': '#8B5CF6',      // Purple for training nodes
+  'skill': '#3b82f6',         // Blue for skill nodes
+  'certification': '#f59e0b', // Yellow for certification nodes
+  'outcome': '#ef4444',       // Red for outcome nodes
+  'process': '#6366f1',       // Indigo for general process nodes
+  'transition': '#ec4899',    // Pink for transition nodes
+  'default': '#8B5CF6'        // Default purple
+};
+
 const ProcessGraph = ({ graphData, title }: ProcessGraphProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,13 +35,38 @@ const ProcessGraph = ({ graphData, title }: ProcessGraphProps) => {
       const nodes = parsedData.nodes || [];
       const edges = parsedData.edges || [];
       
-      // Process nodes to ensure they have required properties
-      const preparedNodes = nodes.map(node => ({
-        ...node,
-        id: String(node.id),
-        label: node.label || String(node.id),
-        type: (node.type || 'process').toLowerCase()
-      }));
+      // Process nodes to ensure they have required properties and assign color types
+      const preparedNodes = nodes.map(node => {
+        // Determine node type from data or infer from label if possible
+        let nodeType = (node.type || '').toLowerCase();
+        
+        // If no type is specified, try to infer from the node label
+        if (!nodeType && node.label) {
+          const label = node.label.toLowerCase();
+          if (label.includes('start') || label.includes('begin')) {
+            nodeType = 'start';
+          } else if (label.includes('training') || label.includes('course') || label.includes('learning')) {
+            nodeType = 'training';
+          } else if (label.includes('skill') || label.includes('competency')) {
+            nodeType = 'skill';
+          } else if (label.includes('certification') || label.includes('certificate')) {
+            nodeType = 'certification';
+          } else if (label.includes('outcome') || label.includes('result')) {
+            nodeType = 'outcome';
+          } else if (label.includes('transition') || label.includes('move')) {
+            nodeType = 'transition';
+          } else {
+            nodeType = 'process';
+          }
+        }
+        
+        return {
+          ...node,
+          id: String(node.id),
+          label: node.label || String(node.id),
+          type: nodeType || 'process'
+        };
+      });
       
       // Process edges to ensure they have required properties
       const preparedEdges = edges.map(edge => ({
@@ -59,6 +96,7 @@ const ProcessGraph = ({ graphData, title }: ProcessGraphProps) => {
     edges: processedEdges,
     height: 500,
     darkMode: true, // Enable dark mode
+    colorScale: NODE_COLORS  // Pass our custom color scale
   });
   
   return (
