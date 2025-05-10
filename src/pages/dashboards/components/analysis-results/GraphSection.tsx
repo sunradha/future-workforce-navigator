@@ -15,7 +15,7 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
     // Short timeout to ensure DOM is ready for D3 rendering
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 100);
+    }, 300);
     
     return () => clearTimeout(timer);
   }, [results]);
