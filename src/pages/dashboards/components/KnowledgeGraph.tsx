@@ -73,7 +73,7 @@ const KnowledgeGraph = ({
     setProcessedNodes(preparedNodes);
     setProcessedEdges(validEdges);
     
-    // Shorter delay to ensure DOM is ready but not too long
+    // Short delay to ensure DOM is ready
     setTimeout(() => setIsLoading(false), 100);
   }, [nodes, edges, isSchema]);
 

@@ -46,14 +46,14 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     svg.append("defs").append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 28) // Increased to prevent arrow overlapping with node
+      .attr("refX", 32) // Increased to prevent arrow overlapping with node
       .attr("refY", 0)
       .attr("orient", "auto")
-      .attr("markerWidth", 9)
-      .attr("markerHeight", 9)
+      .attr("markerWidth", 10)
+      .attr("markerHeight", 10)
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#aaa"); // Lighter color for better visibility on dark background
+      .attr("fill", "#ddd"); // Lighter color for better visibility
 
     // Create a color scale for node types
     const colorScale = d3.scaleOrdinal()
@@ -75,7 +75,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .data(edges)
       .enter()
       .append("path")
-      .attr("stroke", "#aaa") // Lighter edge color for dark background
+      .attr("stroke", "#ddd") // Lighter edge color for dark background
       .attr("stroke-opacity", 0.7)
       .attr("stroke-width", 2.5)
       .attr("marker-end", "url(#arrowhead)")
@@ -90,7 +90,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     // Add background for link labels
     linkLabels.append("rect")
-      .attr("fill", "rgba(50, 50, 50, 0.8)") // Dark semi-transparent background
+      .attr("fill", "rgba(60, 60, 60, 0.9)") // Darker semi-transparent background
       .attr("rx", 4)
       .attr("ry", 4)
       .attr("opacity", 0.9);
@@ -136,14 +136,14 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("stroke", "#fff")
       .attr("stroke-width", 2.5);
 
-    // Add node labels
+    // Add node labels (BLACK text inside colored nodes)
     nodeGroups.append("text")
       .text(d => formatLabel(d.label))
       .attr("font-size", "14px") // Increased font size
       .attr("font-weight", "bold")
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
-      .attr("fill", "#000") // Black text for better visibility inside colored nodes
+      .attr("fill", "#000") // BLACK text for better visibility inside colored nodes
       .attr("pointer-events", "none")
       .each(function(d) {
         const text = d3.select(this);
@@ -172,22 +172,24 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     nodeGroups.append("title")
       .text(d => `${d.label} (${d.type || 'Entity'})`);
 
-    // Add labels outside nodes
+    // Add labels OUTSIDE nodes - WHITE text for dark background
     nodeGroups.append("text")
       .attr("class", "outside-label")
       .attr("dy", -55) // Position above the node
       .attr("text-anchor", "middle")
       .attr("font-size", "14px")
       .attr("font-weight", "bold")
-      .attr("fill", "#fff") // White text for dark background
-      .attr("opacity", 0) // Initially hidden
+      .attr("fill", "#fff") // WHITE text for dark background
       .text(d => formatLabel(d.label));
 
-    // Run the simulation for a number of iterations to position nodes before first render
+    // Run the simulation for more iterations to position nodes before first render
     // This ensures initial positions are calculated before display
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 300; i++) {
       simulation.tick();
     }
+    
+    // Update positions immediately after simulation
+    updatePositions();
     
     // Update positions on tick
     simulation.on("tick", () => {
@@ -197,6 +199,11 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         node.y = Math.max(45, Math.min(height - 45, node.y || height/2));
       });
       
+      updatePositions();
+    });
+    
+    // Function to update all positions
+    function updatePositions() {
       // Update link positions with smoother curves
       link.attr("d", (d: any) => {
         const sourceX = d.source.x;
@@ -221,32 +228,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       
       // Update node positions
       nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
-    });
-    
-    // Immediately apply positions after simulation
-    // Update link positions
-    link.attr("d", (d: any) => {
-      const sourceX = d.source.x;
-      const sourceY = d.source.y;
-      const targetX = d.target.x;
-      const targetY = d.target.y;
-      
-      const dx = targetX - sourceX;
-      const dy = targetY - sourceY;
-      const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
-      
-      return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
-    });
-    
-    // Update link label positions
-    linkLabels.attr("transform", (d: any) => {
-      const x = (d.source.x + d.target.x) / 2;
-      const y = (d.source.y + d.target.y) / 2;
-      return `translate(${x},${y - 15})`;
-    });
-    
-    // Update node positions
-    nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+    }
     
     // Stop the simulation after initial positioning - the graph is now static until drag events
     simulation.stop();
@@ -259,6 +241,9 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .scale(initialScale)
         .translate(-width/2, -height/2)
     );
+    
+    // Trigger a fake zoom event to ensure everything is rendered
+    svg.dispatch("zoom");
     
     // Drag functions
     function dragstarted(event: any) {
@@ -275,8 +260,6 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     function dragended(event: any) {
       if (!event.active) simulation.alphaTarget(0);
       // Keep positions fixed after dragging for better UX
-      // event.subject.fx = null;
-      // event.subject.fy = null;
     }
     
     // Helper functions
@@ -304,7 +287,12 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
   useEffect(() => {
     // Only render if we have nodes
     if (nodes.length > 0) {
-      renderGraph();
+      // Small timeout to ensure the DOM is ready
+      const timer = setTimeout(() => {
+        renderGraph();
+      }, 50);
+      
+      return () => clearTimeout(timer);
     }
     
     // Add resize listener
@@ -314,5 +302,5 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [renderGraph]);
+  }, [renderGraph, nodes.length]);
 };
