@@ -73,8 +73,8 @@ const KnowledgeGraph = ({
     setProcessedNodes(preparedNodes);
     setProcessedEdges(validEdges);
     
-    // Short delay to ensure DOM is ready
-    setTimeout(() => setIsLoading(false), 200);
+    // Longer delay to ensure DOM is fully ready
+    setTimeout(() => setIsLoading(false), 400);
   }, [nodes, edges, isSchema]);
 
   // Use the D3 graph hook
