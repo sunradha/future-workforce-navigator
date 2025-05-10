@@ -22,12 +22,13 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
   
   if (!results?.result) return null;
   
-  // Check if there's knowledge graph data to display
-  const hasKnowledgeGraph = results.result.chart && 
+  // Check if there's knowledge graph or causal graph data to display
+  // (process_flow is handled in StandardChartsSection)
+  const hasGraphData = results.result.chart && 
     ['knowledge_graph', 'causal_graph'].includes(results.result.chart.type || '') && 
     results.result.chart.data;
   
-  if (!hasKnowledgeGraph) return null;
+  if (!hasGraphData) return null;
 
   const chartData = results.result.chart.data;
   const nodes = chartData?.nodes || [];

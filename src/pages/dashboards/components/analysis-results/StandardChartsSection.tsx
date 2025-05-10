@@ -15,7 +15,7 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
   // Check if there's chart data to display
   const hasStandardChartData = results.result.chart && 
     results.result.chart.data &&
-    !['knowledge_graph', 'causal_graph', 'time_series', 'multi-series_time_series_chart', 'ranking', 'comparative_bar'].includes(results.result.chart.type || '');
+    !['knowledge_graph', 'causal_graph', 'time_series', 'multi-series_time_series_chart', 'ranking', 'comparative_bar', 'process_flow'].includes(results.result.chart.type || '');
 
   // Check if there's time series data to display
   const hasTimeSeriesChart = results.result.chart && 
@@ -36,8 +36,13 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
   const hasComparativeBarChart = results.result.chart &&
     results.result.chart.type === 'comparative_bar' &&
     results.result.chart.data;
+  
+  // Check if there's process flow data to display
+  const hasProcessFlowChart = results.result.chart && 
+    results.result.chart.type === 'process_flow' && 
+    results.result.chart.data;
     
-  const hasAnyChart = hasStandardChartData || hasTimeSeriesChart || hasRankingChart || hasComparativeBarChart || hasMultiSeriesTimeSeriesChart;
+  const hasAnyChart = hasStandardChartData || hasTimeSeriesChart || hasRankingChart || hasComparativeBarChart || hasMultiSeriesTimeSeriesChart || hasProcessFlowChart;
   const hasKnowledgeGraph = results.result.chart && 
     ['knowledge_graph', 'causal_graph'].includes(results.result.chart.type || '') && 
     results.result.chart.data;
@@ -168,6 +173,23 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
             data={results.result.chart.data}
             height={400}
             className="w-full"
+          />
+        </div>
+      )}
+      
+      {/* Process Flow Chart */}
+      {hasProcessFlowChart && (
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
+          <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <Route className="h-4 w-4 text-green-500" />
+            Process Flow
+          </h3>
+          <ProcessGraph 
+            graphData={results.result.chart.data.nodes && results.result.chart.data.edges ? 
+              JSON.stringify({ nodes: results.result.chart.data.nodes, edges: results.result.chart.data.edges }) : 
+              JSON.stringify(results.result.chart.data)
+            } 
+            title="Process Flow"
           />
         </div>
       )}
