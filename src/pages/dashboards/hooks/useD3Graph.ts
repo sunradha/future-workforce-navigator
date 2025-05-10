@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Node, Edge } from '../types/knowledgeGraphTypes';
@@ -46,28 +47,28 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     svg.append("defs").append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 25)
+      .attr("refX", 28) // Increased to prevent arrow overlapping with node
       .attr("refY", 0)
       .attr("orient", "auto")
-      .attr("markerWidth", 8)
-      .attr("markerHeight", 8)
+      .attr("markerWidth", 9)
+      .attr("markerHeight", 9)
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#999");
+      .attr("fill", "#777");
 
     // Create a color scale for node types
     const colorScale = d3.scaleOrdinal()
       .domain(['entity', 'employee', 'occupation', 'industry', 'training', 'reskilling_case', 'reskilling_event'])
       .range(['#8B5CF6', '#F59E0B', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#F97316']);
 
-    // Create the simulation
+    // Create the simulation with increased repulsion strength
     const simulation = d3.forceSimulation(nodes as any)
       .force("link", d3.forceLink(edges)
         .id((d: any) => d.id)
-        .distance(150))
-      .force("charge", d3.forceManyBody().strength(-800))
+        .distance(180)) // Increased distance between nodes
+      .force("charge", d3.forceManyBody().strength(-1000)) // Stronger repulsion
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collide", d3.forceCollide().radius(80));
+      .force("collide", d3.forceCollide().radius(80)); // Increased collision radius
 
     // Draw the links
     const link = g.append("g")
@@ -75,9 +76,9 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .data(edges)
       .enter()
       .append("path")
-      .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6)
-      .attr("stroke-width", 2)
+      .attr("stroke", "#777")
+      .attr("stroke-opacity", 0.7)
+      .attr("stroke-width", 2.5)
       .attr("marker-end", "url(#arrowhead)")
       .attr("fill", "none");
 
@@ -93,26 +94,27 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("fill", "white")
       .attr("rx", 4)
       .attr("ry", 4)
-      .attr("opacity", 0.8);
+      .attr("opacity", 0.9);
 
     // Add text for link labels
     const linkText = linkLabels.append("text")
       .text(d => formatRelationship(d.relationship))
-      .attr("font-size", "10px")
+      .attr("font-size", "12px") // Increased font size
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
       .attr("pointer-events", "none")
-      .attr("fill", "#333");
+      .attr("fill", "#333")
+      .attr("font-weight", "500");
 
     // Size the rectangles based on text content
     linkLabels.selectAll("text").each(function(this: SVGTextElement) {
       const bbox = this.getBBox();
       const parent = d3.select(this.parentNode as any);
       parent.select("rect")
-        .attr("x", bbox.x - 4)
-        .attr("y", bbox.y - 2)
-        .attr("width", bbox.width + 8)
-        .attr("height", bbox.height + 4);
+        .attr("x", bbox.x - 6) // More padding
+        .attr("y", bbox.y - 4)
+        .attr("width", bbox.width + 12) // More padding
+        .attr("height", bbox.height + 8); // More padding
     });
 
     // Draw the nodes
@@ -126,17 +128,17 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .on("drag", dragged)
         .on("end", dragended));
 
-    // Add node circles
+    // Add node circles - FIX: Explicitly define the return type as string
     nodeGroups.append("circle")
-      .attr("r", 40)
-      .attr("fill", d => colorScale(d.type || 'entity'))
+      .attr("r", 45) // Increased node size
+      .attr("fill", (d: Node): string => colorScale(d.type || 'entity') as string)
       .attr("stroke", "#fff")
-      .attr("stroke-width", 2);
+      .attr("stroke-width", 2.5);
 
     // Add node labels
     nodeGroups.append("text")
       .text(d => formatLabel(d.label))
-      .attr("font-size", "12px")
+      .attr("font-size", "14px") // Increased font size
       .attr("font-weight", "bold")
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
@@ -155,21 +157,13 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         }
         
         // For multi-word labels, split into lines
-        const firstWords = words.slice(0, 2).join(' ');
-        const remainingWords = words.slice(2).join(' ');
-        
-        text.append("tspan")
-          .attr("x", 0)
-          .attr("y", "-0.6em")
-          .text(firstWords);
-          
-        if (remainingWords) {
+        const maxWords = 2;
+        for (let i = 0; i < words.length; i += maxWords) {
+          const lineWords = words.slice(i, i + maxWords);
           text.append("tspan")
             .attr("x", 0)
-            .attr("y", "0.6em")
-            .text(remainingWords.length > 12 ? 
-                remainingWords.substring(0, 10) + "..." : 
-                remainingWords);
+            .attr("y", (i === 0 ? -0.6 : 0.6) + "em")
+            .text(lineWords.join(' '));
         }
       });
 
@@ -181,17 +175,23 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     simulation.on("tick", () => {
       // Constrain nodes to the SVG bounds
       nodes.forEach(node => {
-        node.x = Math.max(40, Math.min(width - 40, node.x || width/2));
-        node.y = Math.max(40, Math.min(height - 40, node.y || height/2));
+        node.x = Math.max(45, Math.min(width - 45, node.x || width/2));
+        node.y = Math.max(45, Math.min(height - 45, node.y || height/2));
       });
       
-      // Update link positions
+      // Update link positions with smoother curves
       link.attr("d", (d: any) => {
         const sourceX = d.source.x;
         const sourceY = d.source.y;
         const targetX = d.target.x;
         const targetY = d.target.y;
-        return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+        
+        // Calculate the path with a slight curve
+        const dx = targetX - sourceX;
+        const dy = targetY - sourceY;
+        const dr = Math.sqrt(dx * dx + dy * dy) * 1.2; // Adjust the curve
+        
+        return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
       });
       
       // Update link label positions
@@ -205,12 +205,12 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     });
     
-    // Auto-center the graph initially
+    // Auto-center the graph initially with better scale
     setTimeout(() => {
       svg.call(zoom.transform as any, 
         d3.zoomIdentity
           .translate(width/2, height/2)
-          .scale(0.7)
+          .scale(0.8) // Better initial zoom level
           .translate(-width/2, -height/2)
       );
     }, 100);
@@ -250,8 +250,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .replace(/_/g, ' ')
         .toLowerCase();
       
-      return formatted.length > 12 ? 
-        formatted.substring(0, 10) + "..." : 
+      return formatted.length > 15 ? 
+        formatted.substring(0, 12) + "..." : 
         formatted;
     }
   }, [svgRef, nodes, edges, height]);
