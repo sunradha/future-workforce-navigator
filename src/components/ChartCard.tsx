@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartData, BarData } from '@/types';
@@ -33,7 +32,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   height = 300,
   className = '',
 }) => {
-  // Transform the data if needed
+  // Transform the data if needed - but keep multi-series time series data as is
   const chartData = type === 'multi-series_time_series_chart' ? data : transformApiData(data, type);
 
   console.log("ChartCard rendering with type:", type, "and data:", chartData);
