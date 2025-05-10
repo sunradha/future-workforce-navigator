@@ -327,7 +327,8 @@ export const useD3Graph = ({
           (otherEdge !== d && otherEdge.source.id === d.source.id && otherEdge.target.id === d.target.id)
         );
         
-        let labelX, labelY;
+        let labelX;
+        let labelY;
         
         if (isBidirectional || distance < nodeRadius * 4) {
           // For bidirectional or close nodes, position label with offset from the midpoint
@@ -342,14 +343,14 @@ export const useD3Graph = ({
           labelY = midY + Math.sin(perpAngle) * curveOffset;
         } else {
           // For straight lines, position at midpoint with small offset
-          const labelX = (sourceEdgeX + targetEdgeX) / 2;
-          const labelY = (sourceEdgeY + targetEdgeY) / 2;
+          const midX = (sourceEdgeX + targetEdgeX) / 2;
+          const midY = (sourceEdgeY + targetEdgeY) / 2;
           
           // Offset to avoid overlapping with the line
           const perpAngle = angle + Math.PI / 2;
           const offset = 15; // Smaller offset for straight lines
-          labelX = labelX + Math.cos(perpAngle) * offset;
-          labelY = labelY + Math.sin(perpAngle) * offset;
+          labelX = midX + Math.cos(perpAngle) * offset;
+          labelY = midY + Math.sin(perpAngle) * offset;
         }
         
         return `translate(${labelX},${labelY})`;

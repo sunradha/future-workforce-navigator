@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +25,7 @@ const questionsByCategory = {
     "What is the typical progression through training programs for employees across different sectors?",
     "How do employees transition between occupations before and after completing training programs?",
     "What are the most common sequences of skill categories acquired through various training programs?",
-    "How do employees move through multiple training programs over time within the same sector or job role?"
+    "What are the common training paths employees follow from foundational to advanced programs within a specific skill category?"
   ],
   generalAnalytics: [
     "How training budgets have varied over the years and any correlation with increase or decrease in the training budget?",
