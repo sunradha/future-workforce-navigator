@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Layers, GitGraph, FlowArrow, BarChart2 } from 'lucide-react';
 
 interface QuestionSelectorProps {
   loading: boolean;
@@ -21,6 +22,12 @@ interface QuestionSelectorProps {
   onAnalyze: (question: string) => void;
   onTabChange: (value: string) => void;
   questions: string[];
+  questionsByCategory?: {
+    knowledgeGraph: string[];
+    causalGraph: string[];
+    processMining: string[];
+    generalAnalytics: string[];
+  };
 }
 
 const QuestionSelector = ({
@@ -31,28 +38,70 @@ const QuestionSelector = ({
   onSelectedQuestionChange,
   onAnalyze,
   onTabChange,
-  questions
+  questions,
+  questionsByCategory
 }: QuestionSelectorProps) => {
+  const [mainTab, setMainTab] = useState("predefined");
+  const [categoryTab, setCategoryTab] = useState("knowledgeGraph");
+  
+  // Handle main tab change
+  const handleMainTabChange = (value: string) => {
+    setMainTab(value);
+    onTabChange(value);
+  };
+
+  // Current questions based on selected category
+  const currentQuestions = questionsByCategory ? 
+    questionsByCategory[categoryTab as keyof typeof questionsByCategory] : 
+    questions;
+
   return (
-    <Tabs defaultValue="predefined" className="w-full" onValueChange={onTabChange}>
+    <Tabs value={mainTab} className="w-full" onValueChange={handleMainTabChange}>
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="predefined">Pre-defined Questions</TabsTrigger>
         <TabsTrigger value="custom">Ask Custom Question</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="predefined" className="space-y-2">
-        <Select value={selectedQuestion} onValueChange={onSelectedQuestionChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a question" />
-          </SelectTrigger>
-          <SelectContent>
-            {questions.map((question, index) => (
-              <SelectItem key={index} value={question}>
-                {question}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <TabsContent value="predefined" className="space-y-4">
+        {/* Category tabs */}
+        <Tabs value={categoryTab} className="w-full" onValueChange={setCategoryTab}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="knowledgeGraph" className="flex items-center gap-1">
+              <Layers className="h-4 w-4" />
+              <span>Knowledge Graph</span>
+            </TabsTrigger>
+            <TabsTrigger value="causalGraph" className="flex items-center gap-1">
+              <GitGraph className="h-4 w-4" />
+              <span>Causal Graph</span>
+            </TabsTrigger>
+            <TabsTrigger value="processMining" className="flex items-center gap-1">
+              <FlowArrow className="h-4 w-4" />
+              <span>Process Flow</span>
+            </TabsTrigger>
+            <TabsTrigger value="generalAnalytics" className="flex items-center gap-1">
+              <BarChart2 className="h-4 w-4" />
+              <span>General Analytics</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Content for each category */}
+          {Object.keys(questionsByCategory || {}).map((category) => (
+            <TabsContent key={category} value={category} className="space-y-2">
+              <Select value={selectedQuestion} onValueChange={onSelectedQuestionChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a question" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currentQuestions.map((question, index) => (
+                    <SelectItem key={index} value={question}>
+                      {question}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </TabsContent>
+          ))}
+        </Tabs>
         
         <Button 
           onClick={() => onAnalyze(selectedQuestion)}

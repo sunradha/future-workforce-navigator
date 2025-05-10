@@ -49,6 +49,7 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
           nodes={nodes}
           edges={edges}
           height={600}
+          darkMode={true}
         />
       )}
     </div>

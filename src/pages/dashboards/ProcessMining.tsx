@@ -7,27 +7,44 @@ import { Loader2, Brain } from 'lucide-react';
 import QuestionSelector from './components/QuestionSelector';
 import AnalysisResults from './components/AnalysisResults';
 
-const questions = [
-  "How have training budgets varied over the years? Is there a trend of increase or decrease?",
-  "Which sectors have consistently maintained or increased investment in training programs over the years?",
-  "In which sectors has investment in training declined over the years?",
-  "Which job roles across sectors are at the highest risk of automation?",
-  "Which local authorities in England face a higher risk of job automation compared to others?",
-  "Which training programs should be prioritized to address automation risks across industries?",
-  "Which training programs were considered the most successful or effective, and why?",
-  "Which training programs received the best feedback from employees?",
-  "Which training programs were perceived by employees to offer the most benefit?",
-  "Which skill categories need prioritization to improve employees' ability to perform their jobs across sectors?",
-  "Which training programs were considered highly difficult or challenging by employees?",
-  "Which skill categories are associated with high-difficulty training programs?",
-  "Which employees struggled across multiple training programs?",
-  "What is the average time taken to complete training programs across industries?",
-  "Which training programs took longer to complete than others?",
-  "Which training programs had the highest number of incomplete cases?",
-  "What are the various training programs offered?",
-  "Which training program was most popular among employees across industries?",
-  "What is the typical progression of employees through training programs?",
-  "How have all training programs performed in the last one year?"
+// Questions organized by category
+const questionsByCategory = {
+  knowledgeGraph: [
+    "What are the key concepts in the training dataset?",
+    "How are different training programs connected?",
+    "What relationships exist between skills and job roles?",
+    "How do training budgets relate to different sectors?",
+    "What connections exist between employee skills and training outcomes?"
+  ],
+  causalGraph: [
+    "Which sectors have consistently maintained or increased investment in training programs over the years?",
+    "In which sectors has investment in training declined over the years?",
+    "Which job roles across sectors are at the highest risk of automation?",
+    "Which local authorities in England face a higher risk of job automation compared to others?",
+    "Which training programs should be prioritized to address automation risks across industries?"
+  ],
+  processMining: [
+    "What is the typical progression of employees through training programs?",
+    "Which training programs had the highest number of incomplete cases?",
+    "What is the average time taken to complete training programs across industries?",
+    "How have all training programs performed in the last one year?",
+    "Which training program had the most variations in completion paths?"
+  ],
+  generalAnalytics: [
+    "How have training budgets varied over the years? Is there a trend of increase or decrease?",
+    "Which training programs were considered the most successful or effective, and why?",
+    "Which training programs received the best feedback from employees?",
+    "Which training programs were perceived by employees to offer the most benefit?",
+    "Which skill categories need prioritization to improve employees' ability to perform their jobs across sectors?"
+  ]
+};
+
+// Flatten questions for backward compatibility
+const allQuestions = [
+  ...questionsByCategory.knowledgeGraph,
+  ...questionsByCategory.causalGraph,
+  ...questionsByCategory.processMining,
+  ...questionsByCategory.generalAnalytics
 ];
 
 const ProcessMining = () => {
@@ -79,7 +96,8 @@ const ProcessMining = () => {
             onSelectedQuestionChange={setSelectedQuestion}
             onAnalyze={handleAnalysis}
             onTabChange={handleTabChange}
-            questions={questions}
+            questionsByCategory={questionsByCategory}
+            questions={allQuestions}
           />
         </CardContent>
       </Card>
