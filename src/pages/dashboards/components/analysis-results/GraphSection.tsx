@@ -15,7 +15,7 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
     // Short timeout to ensure DOM is ready for D3 rendering
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 200);
+    }, 100);
     
     return () => clearTimeout(timer);
   }, [results]);
@@ -39,7 +39,7 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
   return (
     <div className="space-y-6">
       {isLoading ? (
-        <div className="bg-gray-800 rounded-lg flex items-center justify-center p-8" style={{ height: "600px" }}>
+        <div className="bg-gray-900 rounded-lg flex items-center justify-center p-8" style={{ height: "600px" }}>
           <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
           <span className="ml-2 text-gray-100">Initializing graph...</span>
         </div>

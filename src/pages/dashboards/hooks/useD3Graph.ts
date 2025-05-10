@@ -46,7 +46,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     svg.append("defs").append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 32) // Increased to prevent arrow overlapping with node
+      .attr("refX", 45) // Increased to prevent arrow overlapping with node
       .attr("refY", 0)
       .attr("orient", "auto")
       .attr("markerWidth", 10)
@@ -65,7 +65,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .force("link", d3.forceLink(edges)
         .id((d: any) => d.id)
         .distance(180)) // Increased distance between nodes
-      .force("charge", d3.forceManyBody().strength(-1000)) // Stronger repulsion
+      .force("charge", d3.forceManyBody().strength(-1500)) // Stronger repulsion
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collide", d3.forceCollide().radius(80)); // Increased collision radius
 
@@ -179,7 +179,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("text-anchor", "middle")
       .attr("font-size", "14px")
       .attr("font-weight", "bold")
-      .attr("fill", "#fff") // WHITE text for dark background
+      .attr("fill", "#ffffff") // WHITE text for dark background
       .text(d => formatLabel(d.label));
 
     // Run the simulation for more iterations to position nodes before first render
@@ -191,20 +191,15 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Update positions immediately after simulation
     updatePositions();
     
-    // Update positions on tick
-    simulation.on("tick", () => {
+    // Update all element positions
+    function updatePositions() {
       // Constrain nodes to the SVG bounds
       nodes.forEach(node => {
         node.x = Math.max(45, Math.min(width - 45, node.x || width/2));
         node.y = Math.max(45, Math.min(height - 45, node.y || height/2));
       });
       
-      updatePositions();
-    });
-    
-    // Function to update all positions
-    function updatePositions() {
-      // Update link positions with smoother curves
+      // Update link paths with smoother curves
       link.attr("d", (d: any) => {
         const sourceX = d.source.x;
         const sourceY = d.source.y;
@@ -230,9 +225,6 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     }
     
-    // Stop the simulation after initial positioning - the graph is now static until drag events
-    simulation.stop();
-    
     // Apply initial zoom to ensure everything is visible
     const initialScale = 0.85; // Slightly zoomed out to show the whole graph
     svg.call(zoom.transform as any, 
@@ -242,7 +234,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .translate(-width/2, -height/2)
     );
     
-    // Trigger a fake zoom event to ensure everything is rendered
+    // Force a redraw by dispatching a zoom event
     svg.dispatch("zoom");
     
     // Drag functions
@@ -287,9 +279,14 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
   useEffect(() => {
     // Only render if we have nodes
     if (nodes.length > 0) {
-      // Small timeout to ensure the DOM is ready
+      // Small timeout to ensure the DOM is ready, but not so long that it's noticeable
       const timer = setTimeout(() => {
         renderGraph();
+        
+        // Force a second render after a short delay to ensure everything is positioned correctly
+        setTimeout(() => {
+          renderGraph();
+        }, 100);
       }, 50);
       
       return () => clearTimeout(timer);
