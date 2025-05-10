@@ -15,7 +15,7 @@ export const useEdgeRenderer = (
     .append("marker")
     .attr("id", d => d)
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 42)  // Further from node center for better visibility
+    .attr("refX", 52)  // Further from node center for better visibility with larger nodes
     .attr("refY", 0)
     .attr("markerWidth", 8)
     .attr("markerHeight", 8)
@@ -35,7 +35,7 @@ export const useEdgeRenderer = (
     .attr("class", "link-bg")
     .attr("stroke", "#fff")
     .attr("stroke-opacity", 0.9)
-    .attr("stroke-width", 6)
+    .attr("stroke-width", 8)
     .attr("fill", "none");
 
   // Add links (edges) with arrows
@@ -59,8 +59,8 @@ export const useEdgeRenderer = (
     .enter()
     .append("rect")
     .attr("fill", "white")
-    .attr("rx", 3)
-    .attr("ry", 3)
+    .attr("rx", 4)
+    .attr("ry", 4)
     .attr("fill-opacity", 0.9)
     .attr("stroke", "#f0f0f0")
     .attr("stroke-width", 0.5);
@@ -92,7 +92,7 @@ export const useEdgeRenderer = (
   // Size backgrounds to match text
   linkLabels.each(function(this: SVGTextElement) {
     const bbox = this.getBBox();
-    const padding = 3;
+    const padding = 4;
     
     // Find the index of the current element in the linkLabels selection
     const currentElement = this;

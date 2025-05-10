@@ -76,6 +76,7 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 550, isSchema = false }:
             ref={svgRef} 
             className="w-full h-full" 
             style={{ minHeight: `${height}px` }}
+            data-testid="knowledge-graph-svg"
           ></svg>
         )}
       </div>

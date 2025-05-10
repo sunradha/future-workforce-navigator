@@ -55,9 +55,9 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       centerX,
       centerY,
       {
-        linkDistance: 180,
-        chargeStrength: -400,
-        collideRadius: 60
+        linkDistance: 220,
+        chargeStrength: -800,
+        collideRadius: 70
       }
     );
     
@@ -111,10 +111,15 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     svg.call(zoomHandler as any);
     
-    // Apply initial zoom to fit the graph
-    const initialZoom = Math.min(1, (containerWidth / (nodes.length * 100)));
-    const effectiveZoom = Math.max(0.5, Math.min(0.9, initialZoom));
+    // Calculate appropriate initial zoom based on node count
+    let effectiveZoom = 0.8;
+    if (nodes.length > 10) {
+      effectiveZoom = 0.6;
+    } else if (nodes.length > 5) {
+      effectiveZoom = 0.7;
+    }
     
+    // Apply initial zoom to fit the graph
     svg.call(zoomHandler.transform as any, 
       d3.zoomIdentity
         .translate(containerWidth / 2, height / 2)
@@ -128,7 +133,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       
       const newWidth = svgRef.current.parentElement?.clientWidth || containerWidth;
       
-      svg.attr("width", newWidth);
+      svg.attr("width", "100%");
       svg.attr("viewBox", [0, 0, newWidth, height]);
       
       // Update simulation center forces

@@ -1,3 +1,4 @@
+
 import * as d3 from 'd3';
 import { Node } from '../../types/knowledgeGraphTypes';
 
@@ -17,8 +18,8 @@ export const useNodeRenderer = (
 ) => {
   // Enhanced color scale with better contrasting colors
   const color = d3.scaleOrdinal<string>()
-    .domain(["outcome", "factor", "intervention", "entity", "Entity"])
-    .range(["#ef4444", "#f59e0b", "#3b82f6", "#8B5CF6", "#10b981"]);
+    .domain(["outcome", "factor", "intervention", "entity", "training", "employee", "occupation", "industry", "reskilling_case", "reskilling_event"])
+    .range(["#ef4444", "#f59e0b", "#3b82f6", "#8B5CF6", "#10b981", "#06b6d4", "#eab308", "#ec4899", "#a855f7", "#f43f5e"]);
 
   // Create node groups
   const nodeGroup = g.append("g")
@@ -34,28 +35,28 @@ export const useNodeRenderer = (
 
   // Add a white background circle for better text readability
   nodeGroup.append("circle")
-    .attr("r", 35) // Larger radius for better visibility
+    .attr("r", 45) // Larger radius for better visibility
     .attr("fill", "white")
     .attr("stroke", "#f3f4f6")
     .attr("stroke-width", 3);
   
   // Add colored node circles
   const node = nodeGroup.append("circle")
-    .attr("r", 32) // Slightly smaller than the background
+    .attr("r", 40) // Slightly smaller than the background
     .attr("fill", (d: any): string => {
       // Get color based on node type with proper fallback
       const nodeType = d.type ? cleanTextFn(d.type).toLowerCase() : "entity";
       return color(nodeType);
     })
     .attr("stroke", "#fff")
-    .attr("stroke-width", 1.5)
-    .attr("opacity", 0.9); 
+    .attr("stroke-width", 2)
+    .attr("opacity", 1); 
 
   // Add node labels with improved text wrapping
   const nodeLabels = nodeGroup.append("text")
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "middle")
-    .attr("font-size", "11px")
+    .attr("font-size", "12px")
     .attr("font-weight", "bold")
     .attr("fill", "#fff")
     .attr("pointer-events", "none")
@@ -101,7 +102,7 @@ export const useNodeRenderer = (
       
       // Render each line with proper spacing
       displayLines.forEach((line, i) => {
-        const lineHeight = 12;
+        const lineHeight = 14; // Increased line height
         const yPos = (i - (displayLines.length - 1) / 2) * lineHeight;
         
         d3.select(this).append("tspan")

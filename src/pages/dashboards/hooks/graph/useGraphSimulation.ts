@@ -11,16 +11,16 @@ export const useGraphSimulation = (
   options: GraphSimulationOptions = {}
 ) => {
   const {
-    linkDistance = 150,           // Adjusted link distance
-    chargeStrength = -500,        // More moderate repulsion
-    collideRadius = 50,           // Adjusted collision radius
+    linkDistance = 200,           // Increased link distance
+    chargeStrength = -800,        // Stronger repulsion
+    collideRadius = 70,           // Increased collision radius
   } = options;
 
   // Create copies of nodes and edges to avoid mutation
   const simulationNodes = nodes.map((node, i) => {
-    // Calculate initial positions in a circle layout
+    // Better initial positions - spread nodes out more
     const angle = (i / nodes.length) * 2 * Math.PI;
-    const radius = Math.min(centerX, centerY) * 0.5;
+    const radius = Math.min(centerX, centerY) * 0.6; // Wider spread
     
     return {
       ...node,
@@ -42,29 +42,28 @@ export const useGraphSimulation = (
     .force("link", d3.forceLink(simulationLinks)
       .id((d: any) => String(d.id))
       .distance(linkDistance)
-      .strength(0.7)  // Stronger link force
+      .strength(0.5)  // Moderate link force
     )
     .force("charge", d3.forceManyBody()
       .strength(chargeStrength)
-      .distanceMin(100)  // Minimum distance for force calculation
-      .distanceMax(500)  // Maximum distance for force calculation
+      .distanceMin(150)  // Increased minimum distance for force calculation
+      .distanceMax(800)  // Increased maximum distance for force calculation
     )
     .force("collide", d3.forceCollide()
       .radius(collideRadius)
-      .strength(0.8)  // Increased collision strength
-      .iterations(2)  // More iterations for better collision detection
+      .strength(1)  // Maximum collision strength to prevent overlap
+      .iterations(3)  // More iterations for better collision detection
     )
-    .force("center", d3.forceCenter(centerX, centerY).strength(0.1))
+    .force("center", d3.forceCenter(centerX, centerY).strength(0.2))
     // Add x and y forces for better distribution
-    .force("x", d3.forceX(centerX).strength(0.07))
-    .force("y", d3.forceY(centerY).strength(0.07))
-    // Remove radial force which might be causing issues
+    .force("x", d3.forceX(centerX).strength(0.1))
+    .force("y", d3.forceY(centerY).strength(0.1))
 
   // Set alpha for better initial layout
-  simulation.alpha(1.0).alphaDecay(0.02);
+  simulation.alpha(1.0).alphaDecay(0.01); // Slower decay for better stabilization
   
   // Run more initial iterations for better positioning
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 300; i++) {
     simulation.tick();
   }
 

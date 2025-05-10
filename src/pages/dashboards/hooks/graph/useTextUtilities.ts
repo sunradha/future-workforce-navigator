@@ -34,6 +34,11 @@ export const useTextUtilities = () => {
         ).join(' ');
       }
       
+      // Ensure first letter is capitalized
+      if (cleaned.length > 0) {
+        return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+      }
+      
       return cleaned;
     }
     
