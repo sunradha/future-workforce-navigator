@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Node, Edge } from '../types/knowledgeGraphTypes';
@@ -158,16 +157,21 @@ export const useD3Graph = ({
         .attr("height", bbox.height + 12); // More padding
     });
 
-    // Draw the nodes
+    // Draw the nodes with drag behavior properly applied to each node individually
     const nodeGroups = g.append("g")
       .selectAll("g")
       .data(nodes)
       .enter()
-      .append("g")
-      .call(d3.drag<SVGGElement, any>()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended));
+      .append("g");
+      
+    // Define the drag behavior specifically for nodes
+    const nodeDrag = d3.drag<SVGGElement, any>()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended);
+      
+    // Apply the drag behavior to each node group
+    nodeGroups.call(nodeDrag);
 
     // Add node circles with explicit typing for the fill attribute - updated to use custom colors
     nodeGroups.append("circle")
@@ -404,48 +408,40 @@ export const useD3Graph = ({
         .translate(-width/2, -height/2)
     );
     
-    // Key fix: Modify the drag functions to prevent propagation and allow individual node dragging
+    // CRITICAL FIX: Improved drag handlers that prevent event propagation and maintain node positions
     function dragstarted(event: d3.D3DragEvent<SVGGElement, any, any>) {
+      // Prevent the default zoom behavior
+      event.sourceEvent.stopPropagation();
+      
       if (!event.active) simulation.alphaTarget(0.3).restart();
       
-      // Fix only the dragged node's position
-      if (event.subject) {
-        event.subject.fx = event.subject.x;
-        event.subject.fy = event.subject.y;
-      }
-      
-      // Critical fix: Stop propagation to prevent the zoom behavior from interfering
-      if (event.sourceEvent) {
-        event.sourceEvent.stopPropagation();
-      }
+      // Fix the position of only the dragged node
+      const d = event.subject;
+      d.fx = d.x;
+      d.fy = d.y;
     }
     
     function dragged(event: d3.D3DragEvent<SVGGElement, any, any>) {
+      // Prevent the default zoom behavior
+      event.sourceEvent.stopPropagation();
+      
       // Update only the dragged node's position
-      if (event.subject) {
-        event.subject.fx = event.x;
-        event.subject.fy = event.y;
-      }
+      const d = event.subject;
+      d.fx = event.x;
+      d.fy = event.y;
       
-      // Update the graph immediately to show the node movement in real-time
+      // Update positions immediately for smooth dragging
       updatePositions();
-      
-      // Critical fix: Stop propagation to prevent the zoom behavior from interfering
-      if (event.sourceEvent) {
-        event.sourceEvent.stopPropagation();
-      }
     }
     
     function dragended(event: d3.D3DragEvent<SVGGElement, any, any>) {
+      // Prevent the default zoom behavior
+      event.sourceEvent.stopPropagation();
+      
       if (!event.active) simulation.alphaTarget(0);
       
-      // Keep the node position fixed where it was dropped
-      // Do NOT reset fx/fy to null - this would make the node float back
-      
-      // Critical fix: Stop propagation to prevent the zoom behavior from interfering
-      if (event.sourceEvent) {
-        event.sourceEvent.stopPropagation();
-      }
+      // Keep the node fixed where it was dropped
+      // DO NOT reset fx/fy to null - this would make the node float back
     }
     
     // Helper functions for formatting labels
