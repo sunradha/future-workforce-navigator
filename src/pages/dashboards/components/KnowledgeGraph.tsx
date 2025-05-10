@@ -18,6 +18,8 @@ const KnowledgeGraph = ({
 
   // Process the input data
   useEffect(() => {
+    setIsLoading(true);
+    
     // Process nodes - ensure all nodes have required properties
     const preparedNodes = Array.isArray(nodes) ? nodes.map(node => {
       // Handle string inputs for schema mode
@@ -71,9 +73,8 @@ const KnowledgeGraph = ({
     setProcessedNodes(preparedNodes);
     setProcessedEdges(validEdges);
     
-    // Show loading state briefly to ensure the DOM is ready
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 300);
+    // Slightly longer delay to ensure DOM is fully ready before rendering graph
+    setTimeout(() => setIsLoading(false), 500);
   }, [nodes, edges, isSchema]);
 
   // Use the D3 graph hook

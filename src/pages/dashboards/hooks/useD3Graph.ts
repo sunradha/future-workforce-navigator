@@ -128,10 +128,12 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .on("drag", dragged)
         .on("end", dragended));
 
-    // Add node circles - FIX: Explicitly define the return type as string
+    // Add node circles - explicit typing for the fill attribute
     nodeGroups.append("circle")
       .attr("r", 45) // Increased node size
-      .attr("fill", (d: Node): string => colorScale(d.type || 'entity') as string)
+      .attr("fill", function(d: Node) {
+        return colorScale(d.type || 'entity') as string;
+      })
       .attr("stroke", "#fff")
       .attr("stroke-width", 2.5);
 
@@ -205,14 +207,50 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     });
     
-    // Auto-center the graph initially with better scale
+    // Fix: Initialize the graph with visible positioning and manual simulation steps
+    // Run the simulation for a few iterations to position nodes before first render
+    for (let i = 0; i < 100; i++) {
+      simulation.tick();
+    }
+    
+    // Immediately apply positions after simulation
+    // Update link positions
+    link.attr("d", (d: any) => {
+      const sourceX = d.source.x;
+      const sourceY = d.source.y;
+      const targetX = d.target.x;
+      const targetY = d.target.y;
+      
+      const dx = targetX - sourceX;
+      const dy = targetY - sourceY;
+      const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
+      
+      return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
+    });
+    
+    // Update link label positions
+    linkLabels.attr("transform", (d: any) => {
+      const x = (d.source.x + d.target.x) / 2;
+      const y = (d.source.y + d.target.y) / 2;
+      return `translate(${x},${y - 15})`;
+    });
+    
+    // Update node positions
+    nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+    
+    // Center and fit the graph with a slight delay to ensure all elements are rendered
     setTimeout(() => {
+      // Apply initial zoom that makes everything visible
+      const initialScale = 0.8;
       svg.call(zoom.transform as any, 
         d3.zoomIdentity
           .translate(width/2, height/2)
-          .scale(0.8) // Better initial zoom level
+          .scale(initialScale)
           .translate(-width/2, -height/2)
       );
+      
+      // Stop the simulation after initial positioning
+      simulation.stop();
     }, 100);
     
     // Drag functions
