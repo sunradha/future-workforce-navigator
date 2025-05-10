@@ -12,8 +12,20 @@ import {
 } from 'recharts';
 import { formatYAxisTick } from './utils/chartUtils';
 
+// Define interfaces for the different data formats
+interface TimeSeriesPoint {
+  year: string;
+  sector: string;
+  value: number;
+}
+
+interface TimeSeriesAPIData {
+  x: string[];
+  y: number[];
+}
+
 interface TimeSeriesChartProps {
-  data: any[];
+  data: TimeSeriesPoint[] | TimeSeriesAPIData;
   colors: string[];
   showLegend?: boolean;
   height?: number;
@@ -29,25 +41,23 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 
   // Transform the data if it's not in the expected format
   const chartData = React.useMemo(() => {
-    // If data is already in the correct array format, return it
-    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
-      return data;
+    // If data is already in the correct array format with objects
+    if (Array.isArray(data) && data.length > 0 && 'year' in data[0] && 'sector' in data[0] && 'value' in data[0]) {
+      return data as TimeSeriesPoint[];
     }
 
     // Handle the case where data is in the format from the API with x and y arrays
-    if (data && data.x && Array.isArray(data.x) && data.y && Array.isArray(data.y)) {
+    if (!Array.isArray(data) && 'x' in data && Array.isArray(data.x) && 'y' in data && Array.isArray(data.y)) {
       // Create transformed data points combining x and y values
-      const transformedData = data.x.map((xValue, index) => ({
+      return data.x.map((xValue, index) => ({
         year: xValue,
         sector: 'Total',
         value: data.y[index]
-      }));
-      
-      return transformedData;
+      })) as TimeSeriesPoint[];
     }
     
     console.error("Unsupported data format for TimeSeriesChart:", data);
-    return [];
+    return [] as TimeSeriesPoint[];
   }, [data]);
   
   console.log("Processed chart data:", chartData);
@@ -81,7 +91,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
         
         {sectors.map((sector, index) => (
           <Line
-            key={sector}
+            key={`${sector}-${index}`}
             type="monotone"
             dataKey="value"
             data={chartData.filter(item => item.sector === sector)}
