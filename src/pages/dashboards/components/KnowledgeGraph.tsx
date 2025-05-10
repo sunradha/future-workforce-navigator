@@ -1,55 +1,86 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Network, Loader2 } from 'lucide-react';
-import { KnowledgeGraphProps, Node, Edge } from '../types/knowledgeGraphTypes';
-import { 
-  processSchemaNodes,
-  processSchemaEdges,
-  filterValidEdges,
-  createCompleteNodeSet
-} from '../utils/knowledgeGraphUtils';
+import { KnowledgeGraphProps } from '../types/knowledgeGraphTypes';
 import { useD3Graph } from '../hooks/useD3Graph';
 
-const KnowledgeGraph = ({ title, nodes, edges, height = 550, isSchema = false }: KnowledgeGraphProps) => {
+const KnowledgeGraph = ({ 
+  title, 
+  nodes, 
+  edges, 
+  height = 550,
+  isSchema = false 
+}: KnowledgeGraphProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [nodeCount, setNodeCount] = useState(0);
-  const [edgeCount, setEdgeCount] = useState(0);
+  const [processedNodes, setProcessedNodes] = useState<any[]>([]);
+  const [processedEdges, setProcessedEdges] = useState<any[]>([]);
 
-  // Process nodes and edges if they are in string format
-  const processedNodes = isSchema 
-    ? processSchemaNodes(nodes as string[])
-    : (nodes as Node[]);
-
-  const processedEdges = isSchema 
-    ? processSchemaEdges(edges as string[])
-    : (edges as Edge[]);
-
-  // Filter out invalid edges
-  const validEdges = filterValidEdges(processedEdges);
-  
-  // Create complete node set including nodes from edges
-  const completeNodeSet = createCompleteNodeSet(processedNodes, validEdges);
-
-  // Track data metrics for user feedback
+  // Process the input data
   useEffect(() => {
-    setNodeCount(completeNodeSet.length);
-    setEdgeCount(validEdges.length);
+    // Process nodes - ensure all nodes have required properties
+    const preparedNodes = Array.isArray(nodes) ? nodes.map(node => {
+      // Handle string inputs for schema mode
+      if (typeof node === 'string') {
+        const parts = node.split(': ');
+        const id = parts[0]?.replace(/['"]+/g, '').trim() || 'unknown';
+        const type = parts[1]?.replace(/['"]+/g, '').trim() || 'entity';
+        return { id, label: id, type };
+      }
+      
+      // Handle object inputs
+      return {
+        ...node,
+        id: String(node.id),
+        label: node.label || String(node.id),
+        type: (node.type || 'entity').toLowerCase()
+      };
+    }) : [];
     
-    // Apply a short loading state to ensure DOM is ready for D3
+    // Process edges - ensure all edges have required properties
+    const preparedEdges = Array.isArray(edges) ? edges.map(edge => {
+      // Handle string inputs for schema mode
+      if (typeof edge === 'string') {
+        const match = edge.match(/source: (.*), target: (.*), relationship: (.*)/);
+        if (match) {
+          return {
+            source: match[1]?.replace(/['"]+/g, '').trim() || '',
+            target: match[2]?.replace(/['"]+/g, '').trim() || '',
+            relationship: match[3]?.replace(/['"]+/g, '').trim() || ''
+          };
+        }
+        return { source: '', target: '', relationship: '' };
+      }
+      
+      // Handle object inputs
+      return {
+        ...edge,
+        source: String(edge.source),
+        target: String(edge.target),
+        relationship: edge.relationship || ''
+      };
+    }) : [];
+    
+    // Filter out invalid edges
+    const nodeIdSet = new Set(preparedNodes.map(n => n.id));
+    const validEdges = preparedEdges.filter(edge => 
+      nodeIdSet.has(edge.source) && 
+      nodeIdSet.has(edge.target)
+    );
+    
+    setProcessedNodes(preparedNodes);
+    setProcessedEdges(validEdges);
+    
+    // Show loading state briefly to ensure the DOM is ready
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [completeNodeSet.length, validEdges.length]);
+    setTimeout(() => setIsLoading(false), 300);
+  }, [nodes, edges, isSchema]);
 
-  // Use D3 graph hook for rendering
+  // Use the simplified D3 graph hook
   useD3Graph({
     svgRef,
-    nodes: completeNodeSet,
-    edges: validEdges,
+    nodes: processedNodes,
+    edges: processedEdges,
     height,
   });
 
@@ -61,7 +92,7 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 550, isSchema = false }:
           {title}
         </h3>
         <span className="text-xs text-gray-500">
-          {nodeCount} nodes • {edgeCount} connections
+          {processedNodes.length} nodes • {processedEdges.length} connections
         </span>
       </div>
       
