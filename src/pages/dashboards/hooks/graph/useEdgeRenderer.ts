@@ -8,23 +8,23 @@ export const useEdgeRenderer = (
   validEdges: Edge[],
   cleanTextFn: (text: any) => string
 ) => {
-  // Define arrow markers for directional links - moved farther from node
+  // Define arrow markers for directional links with improved placement
   svg.append("defs").selectAll("marker")
     .data(["arrow"])
     .enter()
     .append("marker")
     .attr("id", d => d)
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 38)  // Increased offset to avoid overlap with larger nodes
+    .attr("refX", 42)  // Further from node center for better visibility
     .attr("refY", 0)
     .attr("markerWidth", 8)
     .attr("markerHeight", 8)
     .attr("orient", "auto")
     .append("path")
     .attr("d", "M0,-5L10,0L0,5")
-    .attr("fill", "#666");  // Darker color for better visibility
+    .attr("fill", "#666");
 
-  // Add links container first so they appear behind nodes
+  // Add links container first to ensure edges are behind nodes
   const linksGroup = g.append("g").attr("class", "links");
   
   // Add link background for better label visibility
@@ -35,7 +35,7 @@ export const useEdgeRenderer = (
     .attr("class", "link-bg")
     .attr("stroke", "#fff")
     .attr("stroke-opacity", 0.9)
-    .attr("stroke-width", 6) // Wider than the actual link
+    .attr("stroke-width", 6)
     .attr("fill", "none");
 
   // Add links (edges) with arrows
@@ -46,14 +46,14 @@ export const useEdgeRenderer = (
     .attr("class", "link")
     .attr("stroke", "#666")
     .attr("stroke-opacity", 0.8)
-    .attr("stroke-width", 2) 
+    .attr("stroke-width", 1.5) 
     .attr("fill", "none")
     .attr("marker-end", "url(#arrow)");
   
-  // Add edge labels with improved positioning and background
+  // Add edge labels group
   const labelGroup = g.append("g").attr("class", "link-labels");
   
-  // Add white label backgrounds first (rect)
+  // Add white label backgrounds first
   const labelBgs = labelGroup.selectAll("rect")
     .data(validEdges)
     .enter()
@@ -61,11 +61,11 @@ export const useEdgeRenderer = (
     .attr("fill", "white")
     .attr("rx", 3)
     .attr("ry", 3)
-    .attr("fill-opacity", 0.85)
+    .attr("fill-opacity", 0.9)
     .attr("stroke", "#f0f0f0")
     .attr("stroke-width", 0.5);
 
-  // Then add text over the backgrounds
+  // Add text over the backgrounds
   const linkLabels = labelGroup.selectAll("text")
     .data(validEdges)
     .enter()
@@ -74,23 +74,31 @@ export const useEdgeRenderer = (
     .text(d => {
       // Format relationship text to be more readable
       const rel = cleanTextFn(d.relationship);
-      return rel.length > 20 ? rel.substring(0, 18) + '...' : rel;
+      // Format text for better readability
+      const formattedRel = rel
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+      
+      return formattedRel.length > 16 ? formattedRel.substring(0, 14) + '...' : formattedRel;
     })
-    .attr("font-size", "9px")
+    .attr("font-size", "10px")
     .attr("font-weight", "bold")
     .attr("text-anchor", "middle")
     .attr("dy", "-0.5em") // Move text above the line
     .attr("fill", "#333");
 
   // Size backgrounds to match text
-  linkLabels.each(function() {
+  linkLabels.each(function(this: SVGTextElement) {
     const bbox = this.getBBox();
     const padding = 3;
     
-    // Find matching background rectangle
-    const index = d3.select(this).datum();
+    // Find the index of the current element in the linkLabels selection
+    const currentElement = this;
+    const index = linkLabels.nodes().indexOf(currentElement);
     
-    labelBgs.filter(d => d === index)
+    labelBgs.filter((_, i) => i === index)
       .attr("x", bbox.x - padding)
       .attr("y", bbox.y - padding)
       .attr("width", bbox.width + (padding * 2))

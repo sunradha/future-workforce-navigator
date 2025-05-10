@@ -34,11 +34,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     const { svg, g, containerWidth } = setupResult;
     
     // Validate edges against nodes
-    console.log("Validating", edges.length, "edges against", nodes.length, "nodes");
-    console.log("Node IDs:", nodes.map(n => n.id));
     const validEdges = validateEdges(edges, nodes);
-    
-    console.log("Valid edges for rendering:", validEdges.length);
+    console.log(`Valid edges for rendering: ${validEdges.length} (from ${edges.length} total)`);
     
     if (validEdges.length === 0 && nodes.length > 0) {
       // Render fallback when there are no valid connections
@@ -47,16 +44,20 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       return;
     }
 
-    // Initialize the force simulation with better positioning
+    // Calculate center position
+    const centerX = containerWidth / 2;
+    const centerY = height / 2;
+    
+    // Initialize force simulation with proper center coordinates
     const simulation = useGraphSimulation(
       nodes, 
       validEdges, 
-      containerWidth / 2, 
-      height / 2,
+      centerX,
+      centerY,
       {
-        linkDistance: 200, // Increased for knowledge graphs
-        chargeStrength: -800, // Stronger repulsion
-        collideRadius: 60 // Larger collision radius
+        linkDistance: 180,
+        chargeStrength: -400,
+        collideRadius: 60
       }
     );
     
@@ -66,90 +67,90 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Render nodes and their labels
     const { nodeGroup } = useNodeRenderer(g, nodes, simulation, cleanText);
     
-    // Setup the tick function to update positions on each simulation step
+    // Setup the tick function to update positions
     simulation.on("tick", () => {
-      // Update link background paths
+      // Update link paths
       linkBg.attr("d", (d: any) => {
-        // Get source and target coordinates
-        const sourceX = d.source.x || 0;
-        const sourceY = d.source.y || 0;
-        const targetX = d.target.x || 0;
-        const targetY = d.target.y || 0;
-        
-        // Use straight lines for better readability
-        return `M${sourceX},${sourceY} L${targetX},${targetY}`;
+        if (!d.source.x || !d.target.x) return "";
+        return `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`;
       });
       
-      // Update link paths for straight edges (more readable for knowledge graphs)
       link.attr("d", (d: any) => {
-        // Get source and target coordinates
-        const sourceX = d.source.x || 0;
-        const sourceY = d.source.y || 0;
-        const targetX = d.target.x || 0;
-        const targetY = d.target.y || 0;
-        
-        // Use straight lines for knowledge graphs
-        return `M${sourceX},${sourceY} L${targetX},${targetY}`;
+        if (!d.source.x || !d.target.x) return "";
+        return `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`;
       });
 
-      // Update link label positions to be at the midpoint with offset
+      // Update link label positions
       linkLabels
         .attr("x", (d: any) => {
-          const sourceX = d.source.x || 0;
-          const targetX = d.target.x || 0;
-          return (sourceX + targetX) / 2;
+          if (!d.source.x || !d.target.x) return 0;
+          return (d.source.x + d.target.x) / 2;
         })
         .attr("y", (d: any) => {
-          const sourceY = d.source.y || 0;
-          const targetY = d.target.y || 0;
-          return (sourceY + targetY) / 2 - 8; // Position labels above the line
+          if (!d.source.y || !d.target.y) return 0;
+          return (d.source.y + d.target.y) / 2 - 8;
         });
 
-      // Update node group positions
-      nodeGroup
-        .attr("transform", (d: any) => `translate(${d.x || 0},${d.y || 0})`);
+      // Update node positions with boundary constraints
+      nodeGroup.attr("transform", (d: any) => {
+        // Constrain nodes to be within the SVG boundaries with some padding
+        const padding = 60;
+        const x = Math.max(padding, Math.min(containerWidth - padding, d.x || centerX));
+        const y = Math.max(padding, Math.min(height - padding, d.y || centerY));
+        
+        return `translate(${x},${y})`;
+      });
     });
 
-    // Add a zoom handler with better initial zoom
+    // Add zoom handler with better defaults
     const zoomHandler = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.2, 4]) // Allow more zoom out/in for knowledge graphs
+      .scaleExtent([0.1, 2])
       .on("zoom", (event) => {
         g.attr("transform", event.transform);
       });
 
-    svg.call(zoomHandler);
+    svg.call(zoomHandler as any);
     
-    // Initial zoom to fit the graph better for knowledge graphs
-    const initialZoom = 0.7; // Zoom out to see the whole graph
-    const initialTransform = d3.zoomIdentity
-      .translate(containerWidth / 2, height / 2)
-      .scale(initialZoom)
-      .translate(-containerWidth / 2, -height / 2);
+    // Apply initial zoom to fit the graph
+    const initialZoom = Math.min(1, (containerWidth / (nodes.length * 100)));
+    const effectiveZoom = Math.max(0.5, Math.min(0.9, initialZoom));
     
-    svg.call(zoomHandler.transform, initialTransform);
+    svg.call(zoomHandler.transform as any, 
+      d3.zoomIdentity
+        .translate(containerWidth / 2, height / 2)
+        .scale(effectiveZoom)
+        .translate(-centerX, -centerY)
+    );
 
-    // Add a resize event listener
+    // Handle window resize
     const handleResize = () => {
       if (!svgRef.current) return;
       
-      const newWidth = svgRef.current.parentElement?.clientWidth || 800;
+      const newWidth = svgRef.current.parentElement?.clientWidth || containerWidth;
+      
       svg.attr("width", newWidth);
       svg.attr("viewBox", [0, 0, newWidth, height]);
+      
+      // Update simulation center forces
       simulation.force("center", d3.forceCenter(newWidth / 2, height / 2));
+      simulation.force("x", d3.forceX(newWidth / 2).strength(0.07));
+      
+      // Re-center the graph after resize
+      svg.call(zoomHandler.transform as any, 
+        d3.zoomIdentity
+          .translate(newWidth / 2, height / 2)
+          .scale(effectiveZoom)
+          .translate(-newWidth / 2, -height / 2)
+      );
+      
       simulation.alpha(0.3).restart();
     };
 
     window.addEventListener("resize", handleResize);
 
-    // Run the simulation longer for knowledge graphs for better layout
+    // Run simulation longer for better layout
     simulation.alpha(1).restart();
     
-    // Stop the simulation after a while to save resources
-    setTimeout(() => {
-      simulation.stop();
-      console.log('Stopped simulation to save resources');
-    }, 5000);
-
     return () => {
       simulation.stop();
       window.removeEventListener("resize", handleResize);

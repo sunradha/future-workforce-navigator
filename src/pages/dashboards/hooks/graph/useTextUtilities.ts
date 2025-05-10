@@ -14,30 +14,39 @@ export const useTextUtilities = () => {
     
     // If it's a string, clean it
     if (typeof text === 'string') {
-      // Remove quotes, [object Object], and other undesirable formatting
-      const cleaned = text.replace(/['"]+/g, '').replace(/\[object Object\]/g, '');
+      // Remove quotes and other undesirable formatting
+      const cleaned = text
+        .replace(/['"]+/g, '')
+        .replace(/\[object Object\]/g, '')
+        .trim();
       
-      // Clean up relationship text in all caps
+      // Format ALL_CAPS or snake_case text
       if (cleaned === cleaned.toUpperCase() && cleaned.length > 3) {
         return cleaned.split('_').map(word => 
           word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         ).join(' ');
       }
       
+      // Format snake_case
+      if (cleaned.includes('_')) {
+        return cleaned.split('_').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+      }
+      
       return cleaned;
     }
     
-    // If it's an object with a toString method that would return [object Object],
-    // try to get a better representation
+    // If it's an object with a toString method
     if (typeof text === 'object') {
-      // Try to use label or name property if available
+      // Try to use label, name, or id property if available
       if (text.label) return cleanText(text.label);
       if (text.name) return cleanText(text.name);
       if (text.id) return cleanText(text.id);
       
       // Last resort - stringified with JSON
       try {
-        return JSON.stringify(text).substring(0, 15);
+        return JSON.stringify(text).substring(0, 20);
       } catch (e) {
         return 'Complex Object';
       }
@@ -49,6 +58,7 @@ export const useTextUtilities = () => {
 
   /**
    * Wraps text to fit within a given width
+   * Improved to better handle word breaks
    */
   const wrapText = (text: string, maxLength: number = 15): string[] => {
     if (!text) return [''];
@@ -61,7 +71,11 @@ export const useTextUtilities = () => {
     
     // If it's a single long word
     if (words.length === 1) {
-      return [text.substring(0, maxLength), text.substring(maxLength)];
+      const result = [];
+      for (let i = 0; i < text.length; i += maxLength) {
+        result.push(text.substring(i, i + maxLength));
+      }
+      return result.slice(0, 3); // Limit to 3 lines
     }
     
     // Try to break by words
@@ -99,10 +113,15 @@ export const useTextUtilities = () => {
   const formatNodeLabel = (label: any): string => {
     const cleanedText = cleanText(label);
     
-    // Abbreviate common terms to save space
+    // Abbreviate common terms and improve readability
     return cleanedText
       .replace('Workforce ', '')
-      .replace('Employee ', '');
+      .replace('Employee ', '')
+      .replace('Profile', '')
+      .replace('Cases', '')
+      .replace('Events', '')
+      .replace('Survey', '')
+      .replace('Program', '');
   };
 
   return { cleanText, wrapText, formatNodeLabel };

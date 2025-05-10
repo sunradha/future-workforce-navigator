@@ -9,9 +9,8 @@ import {
   createCompleteNodeSet
 } from '../utils/knowledgeGraphUtils';
 import { useD3Graph } from '../hooks/useD3Graph';
-import { Skeleton } from '@/components/ui/skeleton';
 
-const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }: KnowledgeGraphProps) => {
+const KnowledgeGraph = ({ title, nodes, edges, height = 550, isSchema = false }: KnowledgeGraphProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [nodeCount, setNodeCount] = useState(0);
@@ -55,28 +54,29 @@ const KnowledgeGraph = ({ title, nodes, edges, height = 450, isSchema = false }:
   });
 
   return (
-    <div className="w-full h-full p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
-      <div className="flex justify-between items-center mb-3">
+    <div className="w-full h-full p-5 bg-white rounded-lg border border-gray-100 shadow-sm">
+      <div className="flex justify-between items-center mb-4">
         <h3 className="text-base font-medium flex items-center gap-2 text-purple-600">
           <Network className="h-5 w-5" />
           {title}
         </h3>
         <span className="text-xs text-gray-500">
           {nodeCount} nodes • {edgeCount} connections
-          {nodeCount > 50 && 
-            <span className="ml-1 text-amber-600">(showing top 50)</span>
-          }
         </span>
       </div>
       
-      <div className="w-full overflow-hidden rounded-md bg-white" style={{ height: `${height}px` }}>
+      <div className="w-full overflow-hidden rounded-md bg-gray-50" style={{ height: `${height}px` }}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
             <span className="ml-2 text-sm text-gray-600">Initializing graph...</span>
           </div>
         ) : (
-          <svg ref={svgRef} className="w-full h-full"></svg>
+          <svg 
+            ref={svgRef} 
+            className="w-full h-full" 
+            style={{ minHeight: `${height}px` }}
+          ></svg>
         )}
       </div>
     </div>
