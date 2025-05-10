@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Node, Edge } from '../types/knowledgeGraphTypes';
@@ -87,8 +86,8 @@ export const useD3Graph = ({
 
     // Create a color scale for node types - use custom colors if provided
     const defaultColorScale = d3.scaleOrdinal()
-      .domain(['entity', 'employee', 'occupation', 'industry', 'training', 'reskilling_case', 'reskilling_event', 'skill', 'location', 'process', 'start', 'certification', 'outcome', 'transition'])
-      .range(['#8B5CF6', '#F59E0B', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#F97316', '#F59E0B', '#8B5CF6', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899']);
+      .domain(['entity', 'employee', 'occupation', 'industry', 'training', 'reskilling_case', 'reskilling_event', 'skill', 'location', 'process', 'start', 'certification', 'outcome', 'transition', 'skill_category'])
+      .range(['#8B5CF6', '#F59E0B', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#F97316', '#F59E0B', '#8B5CF6', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8B5CF6']);
 
     // Function to determine color for a node
     const getNodeColor = (node: Node): string => {
@@ -251,8 +250,20 @@ export const useD3Graph = ({
           (otherEdge !== d && otherEdge.source.id === d.source.id && otherEdge.target.id === d.target.id)
         );
         
-        // Different curve strategy based on relationship and distance
-        if (isBidirectional || distance < nodeRadius * 4) {
+        // Self-referential loop detection
+        const isSelfLoop = d.source.id === d.target.id;
+        
+        if (isSelfLoop) {
+          // Special case for self-loops
+          const loopSize = nodeRadius * 1.5;
+          const controlPointX = sourceX + loopSize;
+          const controlPointY = sourceY - loopSize;
+          
+          // Use the curved arrow marker
+          d3.select(this).attr("marker-end", "url(#arrowhead-curved)");
+          
+          return `M${sourceNodeEdgeX},${sourceNodeEdgeY} Q${controlPointX},${controlPointY} ${sourceX + nodeRadius * 0.7},${sourceY - nodeRadius * 0.7}`;
+        } else if (isBidirectional || distance < nodeRadius * 4) {
           // Use more pronounced curves for shorter distances or bidirectional relationships
           const curvature = distance < nodeRadius * 3 ? 0.4 : 0.2;
           const midX = (sourceNodeEdgeX + targetNodeEdgeX) / 2;
@@ -284,13 +295,15 @@ export const useD3Graph = ({
           const dy = target.y - source.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           
-          // Check if there are bidirectional edges
+          // Check if there are bidirectional edges or self-loops
           const isBidirectional = edges.some((otherEdge: any) => 
             (otherEdge.source.id === target.id && otherEdge.target.id === source.id) ||
             (otherEdge !== d && otherEdge.source.id === source.id && otherEdge.target.id === target.id)
           );
           
-          if (isBidirectional || distance < nodeRadius * 4) {
+          const isSelfLoop = source.id === target.id;
+          
+          if (isSelfLoop || isBidirectional || distance < nodeRadius * 4) {
             path.attr("marker-end", "url(#arrowhead-curved)");
           } else {
             path.attr("marker-end", "url(#arrowhead-straight)");
@@ -308,6 +321,15 @@ export const useD3Graph = ({
         const sourceY = d.source.y;
         const targetX = d.target.x;
         const targetY = d.target.y;
+        
+        // Self-referential loop detection
+        const isSelfLoop = d.source.id === d.target.id;
+        
+        if (isSelfLoop) {
+          // Position the label above the loop
+          const loopSize = nodeRadius * 1.5;
+          return `translate(${sourceX + loopSize * 0.5},${sourceY - loopSize * 0.8})`;
+        }
         
         // Calculate the direction angle
         const dx = targetX - sourceX;
@@ -381,25 +403,38 @@ export const useD3Graph = ({
         .translate(-width/2, -height/2)
     );
     
-    // Drag functions with proper typing
+    // Drag functions with proper typing - FIXED: Allow individual node dragging
     function dragstarted(event: d3.D3DragEvent<SVGGElement, any, any>) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
-      // Fix only the dragged node
+      
+      // Fix only the dragged node's position
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
+      
+      // Stop propagation to prevent the zoom behavior from interfering
+      event.sourceEvent.stopPropagation();
     }
     
     function dragged(event: d3.D3DragEvent<SVGGElement, any, any>) {
       // Update only the dragged node's position
       event.subject.fx = event.x;
       event.subject.fy = event.y;
-      // Call update to refresh positions
+      
+      // Update the graph immediately to show the node movement
       updatePositions();
+      
+      // Stop propagation to prevent the zoom behavior from interfering
+      event.sourceEvent.stopPropagation();
     }
     
     function dragended(event: d3.D3DragEvent<SVGGElement, any, any>) {
       if (!event.active) simulation.alphaTarget(0);
-      // Keep the node position fixed after dragging
+      
+      // Keep the node position fixed where it was dropped
+      // Do NOT reset fx/fy to null - this would make the node float back
+      
+      // Stop propagation to prevent the zoom behavior from interfering
+      event.sourceEvent.stopPropagation();
     }
     
     // Helper functions for formatting labels
