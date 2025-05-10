@@ -8,17 +8,26 @@ import QuestionSelector from './components/QuestionSelector';
 import AnalysisResults from './components/AnalysisResults';
 
 const questions = [
-  "Show the connections between employees, their occupations, industries, skills, and locations?",
-  "How training budgets have varied over the years and any correlation with increase or decrease in the training budget?",
-  "Which job roles across sectors are at maximum risk of automation?",
-  "What are the local authorities in England that are at higher risk of job automation than other places in England?",
-  "Which training programs were deemed more successful or effective than others and Why?",
-  "Which training programs were having high level of difficulty or perceived difficulty by employees?",
-  "Which skills needs prioritization to improve the skill levels of employees to perform their job most across different sectors?",
-  "Evaluate the performance of all training programs conducted in the last one year?",
-  "Which training programs were having high level of difficulty or perceived difficulty by employees?",
-  "Which skill categories lead to the most high-difficulty programs?",
-  "Which employees struggled across multiple programs?"
+  "How have training budgets varied over the years? Is there a trend of increase or decrease?",
+  "Which sectors have consistently maintained or increased investment in training programs over the years?",
+  "In which sectors has investment in training declined over the years?",
+  "Which job roles across sectors are at the highest risk of automation?",
+  "Which local authorities in England face a higher risk of job automation compared to others?",
+  "Which training programs should be prioritized to address automation risks across industries?",
+  "Which training programs were considered the most successful or effective, and why?",
+  "Which training programs received the best feedback from employees?",
+  "Which training programs were perceived by employees to offer the most benefit?",
+  "Which skill categories need prioritization to improve employees' ability to perform their jobs across sectors?",
+  "Which training programs were considered highly difficult or challenging by employees?",
+  "Which skill categories are associated with high-difficulty training programs?",
+  "Which employees struggled across multiple training programs?",
+  "What is the average time taken to complete training programs across industries?",
+  "Which training programs took longer to complete than others?",
+  "Which training programs had the highest number of incomplete cases?",
+  "What are the various training programs offered?",
+  "Which training program was most popular among employees across industries?",
+  "What is the typical progression of employees through training programs?",
+  "How have all training programs performed in the last one year?"
 ];
 
 const ProcessMining = () => {
