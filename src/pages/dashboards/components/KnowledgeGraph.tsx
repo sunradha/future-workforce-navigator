@@ -73,8 +73,8 @@ const KnowledgeGraph = ({
     setProcessedNodes(preparedNodes);
     setProcessedEdges(validEdges);
     
-    // Longer delay to ensure DOM is fully ready
-    setTimeout(() => setIsLoading(false), 400);
+    // Shorter delay for better user experience
+    setTimeout(() => setIsLoading(false), 300);
   }, [nodes, edges, isSchema]);
 
   // Use the D3 graph hook
@@ -83,31 +83,32 @@ const KnowledgeGraph = ({
     nodes: processedNodes,
     edges: processedEdges,
     height,
+    darkMode: true, // Enable dark mode
   });
 
   return (
-    <div className="w-full h-full p-5 bg-white rounded-lg border border-gray-100 shadow-sm">
+    <div className="w-full h-full p-5 bg-gray-900 rounded-lg border border-gray-800 shadow-md">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-base font-medium flex items-center gap-2 text-purple-600">
+        <h3 className="text-base font-medium flex items-center gap-2 text-purple-400">
           <Network className="h-5 w-5" />
           {title}
         </h3>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-400">
           {processedNodes.length} nodes • {processedEdges.length} connections
         </span>
       </div>
       
-      <div className="w-full overflow-hidden rounded-md bg-gray-100" style={{ height: `${height}px` }}>
+      <div className="w-full overflow-hidden rounded-md bg-gray-800" style={{ height: `${height}px` }}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-            <span className="ml-2 text-sm text-gray-700">Initializing graph...</span>
+            <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+            <span className="ml-2 text-sm text-gray-300">Initializing graph...</span>
           </div>
         ) : (
           <svg 
             ref={svgRef} 
             className="w-full h-full" 
-            style={{ minHeight: `${height}px` }}
+            style={{ minHeight: `${height}px`, background: "#1A1F2C" }}
             data-testid="knowledge-graph-svg"
           ></svg>
         )}

@@ -24,4 +24,5 @@ export interface KnowledgeGraphProps {
   edges: Edge[] | string[];
   height?: number;
   isSchema?: boolean;
+  darkMode?: boolean;
 }

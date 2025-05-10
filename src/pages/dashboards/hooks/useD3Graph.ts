@@ -7,9 +7,10 @@ interface UseD3GraphProps {
   nodes: Node[];
   edges: Edge[];
   height: number;
+  darkMode?: boolean;
 }
 
-export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) => {
+export const useD3Graph = ({ svgRef, nodes, edges, height, darkMode = false }: UseD3GraphProps) => {
   const renderGraph = useCallback(() => {
     if (!svgRef.current || !nodes.length) {
       console.log("No SVG ref or nodes to render");
@@ -28,7 +29,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("width", "100%")
       .attr("height", height)
       .attr("viewBox", [0, 0, width, height].join(" "))
-      .attr("style", "max-width: 100%; height: auto;")
+      .attr("style", `max-width: 100%; height: auto; background: ${darkMode ? "#1A1F2C" : "#f0f0f0"};`)
       .attr("font-family", "sans-serif");
 
     // Create a group element for the entire graph
@@ -47,14 +48,14 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     svg.append("defs").append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 45) // Position closer to nodes
+      .attr("refX", 60) // Position it further away to ensure it's at the edge of circle
       .attr("refY", 0)
       .attr("orient", "auto")
-      .attr("markerWidth", 10)
-      .attr("markerHeight", 10)
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 6)
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#666"); // Darker color for better visibility on light background
+      .attr("fill", darkMode ? "#FFFFFF" : "#666"); // White arrows in dark mode
 
     // Create a color scale for node types
     const colorScale = d3.scaleOrdinal()
@@ -76,34 +77,34 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .data(edges)
       .enter()
       .append("path")
-      .attr("stroke", "#666") // Darker edge color for light background
+      .attr("stroke", darkMode ? "#FFFFFF" : "#666") // White edge color in dark mode
       .attr("stroke-opacity", 0.7)
       .attr("stroke-width", 2.5)
       .attr("marker-end", "url(#arrowhead)")
       .attr("fill", "none");
 
-    // Draw link labels
+    // Draw link labels - with improved background
     const linkLabels = g.append("g")
       .selectAll("g")
       .data(edges)
       .enter()
       .append("g");
 
-    // Add background for link labels
+    // Add background for link labels (darker in dark mode)
     linkLabels.append("rect")
-      .attr("fill", "rgba(240, 240, 240, 0.9)") // Light semi-transparent background
+      .attr("fill", darkMode ? "rgba(40, 44, 52, 0.9)" : "rgba(240, 240, 240, 0.9)") 
       .attr("rx", 4)
       .attr("ry", 4)
       .attr("opacity", 0.9);
 
     // Add text for link labels - Display full relationship text
     const linkText = linkLabels.append("text")
-      .text(d => formatRelationship(d.relationship, false)) // Pass false to disable truncation
+      .text(d => formatRelationship(d.relationship))
       .attr("font-size", "13px")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
       .attr("pointer-events", "none")
-      .attr("fill", "#333") // Dark text for light background
+      .attr("fill", darkMode ? "#FFFFFF" : "#333") // White text in dark mode
       .attr("font-weight", "500");
 
     // Size the rectangles based on text content
@@ -111,10 +112,10 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       const bbox = this.getBBox();
       const parent = d3.select(this.parentNode as any);
       parent.select("rect")
-        .attr("x", bbox.x - 6) // More padding
-        .attr("y", bbox.y - 4)
-        .attr("width", bbox.width + 12) // More padding
-        .attr("height", bbox.height + 8); // More padding
+        .attr("x", bbox.x - 8) // More padding
+        .attr("y", bbox.y - 6)
+        .attr("width", bbox.width + 16) // More padding
+        .attr("height", bbox.height + 12); // More padding
     });
 
     // Draw the nodes
@@ -134,26 +135,25 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("fill", function(d: Node) {
         return colorScale(d.type || 'entity') as string;
       })
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 2.5);
+      .attr("stroke", darkMode ? "#FFFFFF" : "#fff") // White stroke in dark mode
+      .attr("stroke-width", 2);
 
-    // Add node labels with white text only (no duplicated labels)
+    // Add node labels with white text - using a single label with wrapping
     nodeGroups.append("text")
-      .text(d => formatLabel(d.label, false)) // Pass false to disable truncation
-      .attr("font-size", "14px")
-      .attr("font-weight", "bold")
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
-      .attr("fill", "#ffffff") // WHITE text for visibility inside colored nodes
+      .attr("fill", "#FFFFFF") // Always white for visibility
+      .attr("font-weight", "bold")
+      .attr("font-size", "14px")
       .attr("pointer-events", "none")
       .each(function(d) {
         const text = d3.select(this);
-        const words = formatLabel(d.label, false).split(/\s+/); // No truncation
+        const words = formatLabel(d.label).split(/\s+/);
         
         text.text(null); // Clear the text
         
-        // For multi-word labels, split into lines but don't truncate
-        const lineHeight = 1.1;
+        // For multi-word labels, split into lines with proper placement
+        const lineHeight = 1.1; // Line height factor
         let currentLine = 0;
         let lineWords: string[] = [];
         
@@ -164,7 +164,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
           if ((i + 1) % 2 === 0 || i === words.length - 1) {
             text.append("tspan")
               .attr("x", 0)
-              .attr("y", ((currentLine === 0 ? -0.6 : 0.6) + (currentLine * lineHeight)) + "em")
+              .attr("y", 0)
+              .attr("dy", ((currentLine === 0 ? 0 : lineHeight) + (currentLine - Math.floor(words.length / 2) * 0.5)) + "em")
               .text(lineWords.join(' '));
             
             lineWords = [];
@@ -179,40 +180,50 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     // Function to update positions of all elements
     function updatePositions() {
-      // Constrain nodes to the SVG bounds
-      nodes.forEach(node => {
-        node.x = Math.max(45, Math.min(width - 45, node.x || width/2));
-        node.y = Math.max(45, Math.min(height - 45, node.y || height/2));
-      });
-      
       // Update link paths with smoother curves
       link.attr("d", (d: any) => {
-        const sourceX = d.source.x;
-        const sourceY = d.source.y;
-        const targetX = d.target.x;
-        const targetY = d.target.y;
+        const sourceX = d.source.x || 0;
+        const sourceY = d.source.y || 0;
+        const targetX = d.target.x || 0;
+        const targetY = d.target.y || 0;
         
-        // Calculate the path with a slight curve
+        // Calculate distance for proper arrow placement
         const dx = targetX - sourceX;
         const dy = targetY - sourceY;
-        const dr = Math.sqrt(dx * dx + dy * dy) * 1.2; // Adjust the curve
+        const dr = Math.sqrt(dx * dx + dy * dy) * 1.5; // Smoother curve
         
         return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
       });
       
       // Update link label positions
       linkLabels.attr("transform", (d: any) => {
+        if (!d.source || !d.target || d.source.x === undefined || d.target.x === undefined) {
+          return "translate(0,0)";
+        }
+        
         const x = (d.source.x + d.target.x) / 2;
         const y = (d.source.y + d.target.y) / 2;
-        return `translate(${x},${y - 10})`;
+        
+        // Calculate angle to offset the label
+        const dx = d.target.x - d.source.x;
+        const dy = d.target.y - d.source.y;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        
+        // Add vertical offset to avoid overlap with the link
+        const offset = angle > 90 || angle < -90 ? 15 : -15;
+        
+        return `translate(${x},${y + offset})`;
       });
       
       // Update node positions
-      nodeGroups.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+      nodeGroups.attr("transform", (d: any) => {
+        const x = d.x || 0;
+        const y = d.y || 0;
+        return `translate(${x},${y})`;
+      });
     }
     
     // Run the simulation for more iterations to position nodes before first render
-    // This ensures initial positions are calculated before display
     for (let i = 0; i < 100; i++) {
       simulation.tick();
     }
@@ -221,7 +232,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     updatePositions();
     
     // Apply initial zoom to ensure everything is visible
-    const initialScale = 0.85; // Slightly zoomed out to show the whole graph
+    const initialScale = 0.85; // Slightly zoomed out
     svg.call(zoom.transform as any, 
       d3.zoomIdentity
         .translate(width/2, height/2)
@@ -248,32 +259,25 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     function dragended(event: d3.D3DragEvent<SVGGElement, any, any>) {
       if (!event.active) simulation.alphaTarget(0);
       // Keep the node position fixed after dragging
-      // Don't reset fx/fy to null to keep the node in place
     }
     
-    // Helper functions
-    function formatLabel(label: string, truncate: boolean = true): string {
+    // Helper functions for formatting labels
+    function formatLabel(label: string): string {
       if (!label) return '';
       
-      const formatted = label
+      return label
         .replace(/_/g, ' ')
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
-      
-      // Return full label without truncation
-      return formatted;
     }
     
-    function formatRelationship(relationship: string, truncate: boolean = true): string {
+    function formatRelationship(relationship: string): string {
       if (!relationship) return '';
       
-      const formatted = relationship
+      return relationship
         .replace(/_/g, ' ')
         .toLowerCase();
-      
-      // Return full relationship without truncation
-      return formatted;
     }
 
     // Let the simulation run for a bit to better position elements
@@ -283,7 +287,10 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     simulation.on('tick', updatePositions);
     
-  }, [svgRef, nodes, edges, height]);
+    // Log successful rendering
+    console.log("Graph rendered successfully with", nodes.length, "nodes and", edges.length, "edges");
+    
+  }, [svgRef, nodes, edges, height, darkMode]);
 
   useEffect(() => {
     console.log("useD3Graph effect triggered, nodes:", nodes.length);
@@ -299,8 +306,8 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         setTimeout(() => {
           console.log("Re-rendering graph for final positioning");
           renderGraph();
-        }, 500);
-      }, 200);
+        }, 300);
+      }, 100);
       
       return () => clearTimeout(timer);
     }
