@@ -20,7 +20,7 @@ interface ChartCardProps {
   className?: string;
 }
 
-const COLORS = ['#8B5CF6', '#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#6366f1'];
+const COLORS = ['#8B5CF6', '#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#6366f1', '#ec4899', '#14b8a6', '#f97316', '#8b5cf6', '#06b6d4', '#84cc16'];
 
 const ChartCard: React.FC<ChartCardProps> = ({
   title,
@@ -37,7 +37,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
 
   console.log("ChartCard rendering with type:", type, "and data:", chartData);
 
-  if (chartData.length === 0) {
+  if (!chartData || chartData.length === 0) {
     return (
       <Card className={className}>
         <CardHeader className="pb-2">

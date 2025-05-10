@@ -68,6 +68,31 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
       subtitle: "Items ranked by value"
     };
   };
+  
+  // Function to determine title and subtitle for time series charts
+  const getTimeSeriesChartTitle = () => {
+    const query = results.result.reasoning_answer?.toLowerCase() || '';
+    
+    if (query.includes('training budgets') || query.includes('investment')) {
+      return {
+        title: "Training Investment Trends",
+        subtitle: "Investment in training programs over time by sector"
+      };
+    }
+    
+    if (query.includes('completion time') || query.includes('time taken')) {
+      return {
+        title: "Training Program Completion Time",
+        subtitle: "Average time to complete programs over years"
+      };
+    }
+    
+    // Default title
+    return {
+      title: "Time Series Analysis",
+      subtitle: "Trends over time"
+    };
+  };
 
   return (
     <div className="grid gap-3 grid-cols-1">
@@ -100,11 +125,11 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
       {hasTimeSeriesChart && (
         <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
           <ChartCard
-            title="Time Series Analysis"
-            subtitle="Trends over time"
+            title={getTimeSeriesChartTitle().title}
+            subtitle={getTimeSeriesChartTitle().subtitle}
             type="time_series"
             data={results.result.chart.data}
-            height={350}
+            height={400}
             className="w-full"
           />
         </div>
