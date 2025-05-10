@@ -21,6 +21,9 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
   const nodes = chartData?.nodes || [];
   const edges = chartData?.edges || [];
   
+  // Only render if we actually have data
+  if (nodes.length === 0) return null;
+  
   return (
     <div className="space-y-6">
       <KnowledgeGraph 

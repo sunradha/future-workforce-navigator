@@ -73,8 +73,8 @@ const KnowledgeGraph = ({
     setProcessedNodes(preparedNodes);
     setProcessedEdges(validEdges);
     
-    // Use a short delay to ensure DOM is fully ready before rendering graph
-    setTimeout(() => setIsLoading(false), 200);
+    // Shorter delay to ensure DOM is ready but not too long
+    setTimeout(() => setIsLoading(false), 100);
   }, [nodes, edges, isSchema]);
 
   // Use the D3 graph hook
@@ -97,11 +97,11 @@ const KnowledgeGraph = ({
         </span>
       </div>
       
-      <div className="w-full overflow-hidden rounded-md bg-gray-50" style={{ height: `${height}px` }}>
+      <div className="w-full overflow-hidden rounded-md bg-gray-800" style={{ height: `${height}px` }}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-            <span className="ml-2 text-sm text-gray-600">Initializing graph...</span>
+            <span className="ml-2 text-sm text-gray-100">Initializing graph...</span>
           </div>
         ) : (
           <svg 

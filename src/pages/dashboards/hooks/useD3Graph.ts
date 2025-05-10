@@ -53,12 +53,12 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("markerHeight", 9)
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#777");
+      .attr("fill", "#aaa"); // Lighter color for better visibility on dark background
 
     // Create a color scale for node types
     const colorScale = d3.scaleOrdinal()
-      .domain(['entity', 'employee', 'occupation', 'industry', 'training', 'reskilling_case', 'reskilling_event'])
-      .range(['#8B5CF6', '#F59E0B', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#F97316']);
+      .domain(['entity', 'employee', 'occupation', 'industry', 'training', 'reskilling_case', 'reskilling_event', 'skill', 'location'])
+      .range(['#8B5CF6', '#F59E0B', '#3B82F6', '#10B981', '#EF4444', '#EC4899', '#F97316', '#F59E0B', '#8B5CF6']);
 
     // Create the simulation with increased repulsion strength
     const simulation = d3.forceSimulation(nodes as any)
@@ -75,7 +75,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .data(edges)
       .enter()
       .append("path")
-      .attr("stroke", "#777")
+      .attr("stroke", "#aaa") // Lighter edge color for dark background
       .attr("stroke-opacity", 0.7)
       .attr("stroke-width", 2.5)
       .attr("marker-end", "url(#arrowhead)")
@@ -90,7 +90,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     // Add background for link labels
     linkLabels.append("rect")
-      .attr("fill", "white")
+      .attr("fill", "rgba(50, 50, 50, 0.8)") // Dark semi-transparent background
       .attr("rx", 4)
       .attr("ry", 4)
       .attr("opacity", 0.9);
@@ -102,7 +102,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
       .attr("pointer-events", "none")
-      .attr("fill", "#000") // Black text for better visibility
+      .attr("fill", "#fff") // White text for dark background
       .attr("font-weight", "500");
 
     // Size the rectangles based on text content
@@ -143,7 +143,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       .attr("font-weight", "bold")
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
-      .attr("fill", "#fff")
+      .attr("fill", "#000") // Black text for better visibility inside colored nodes
       .attr("pointer-events", "none")
       .each(function(d) {
         const text = d3.select(this);
@@ -171,6 +171,17 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Add tooltips
     nodeGroups.append("title")
       .text(d => `${d.label} (${d.type || 'Entity'})`);
+
+    // Add labels outside nodes
+    nodeGroups.append("text")
+      .attr("class", "outside-label")
+      .attr("dy", -55) // Position above the node
+      .attr("text-anchor", "middle")
+      .attr("font-size", "14px")
+      .attr("font-weight", "bold")
+      .attr("fill", "#fff") // White text for dark background
+      .attr("opacity", 0) // Initially hidden
+      .text(d => formatLabel(d.label));
 
     // Run the simulation for a number of iterations to position nodes before first render
     // This ensures initial positions are calculated before display
@@ -241,15 +252,13 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     simulation.stop();
     
     // Apply initial zoom to ensure everything is visible
-    setTimeout(() => {
-      const initialScale = 0.85; // Slightly zoomed out to show the whole graph
-      svg.call(zoom.transform as any, 
-        d3.zoomIdentity
-          .translate(width/2, height/2)
-          .scale(initialScale)
-          .translate(-width/2, -height/2)
-      );
-    }, 50);
+    const initialScale = 0.85; // Slightly zoomed out to show the whole graph
+    svg.call(zoom.transform as any, 
+      d3.zoomIdentity
+        .translate(width/2, height/2)
+        .scale(initialScale)
+        .translate(-width/2, -height/2)
+    );
     
     // Drag functions
     function dragstarted(event: any) {
@@ -293,7 +302,10 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
   }, [svgRef, nodes, edges, height]);
 
   useEffect(() => {
-    renderGraph();
+    // Only render if we have nodes
+    if (nodes.length > 0) {
+      renderGraph();
+    }
     
     // Add resize listener
     const handleResize = () => renderGraph();
