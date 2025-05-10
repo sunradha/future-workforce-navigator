@@ -12,7 +12,16 @@ export const useTextUtilities = () => {
     // If it's a string, clean it
     if (typeof text === 'string') {
       // Remove quotes, [object Object], and other undesirable formatting
-      return text.replace(/['"]+/g, '').replace(/\[object Object\]/g, '');
+      const cleaned = text.replace(/['"]+/g, '').replace(/\[object Object\]/g, '');
+      
+      // Clean up relationship text in all caps
+      if (cleaned === cleaned.toUpperCase() && cleaned.length > 3) {
+        return cleaned.split('_').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+      }
+      
+      return cleaned;
     }
     
     // If it's an object with a toString method that would return [object Object],

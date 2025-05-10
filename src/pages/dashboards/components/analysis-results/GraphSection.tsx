@@ -25,7 +25,7 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
       ...node,
       id: String(node.id),
       label: typeof node.label === 'string' ? node.label : String(node.id),
-      type: typeof node.type === 'string' ? node.type : 'Entity'
+      type: typeof node.type === 'string' ? node.type.toLowerCase() : 'entity'
     }));
   };
 

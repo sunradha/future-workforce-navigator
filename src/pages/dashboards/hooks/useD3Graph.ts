@@ -52,9 +52,9 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
       containerWidth / 2, 
       height / 2,
       {
-        linkDistance: 200,
-        chargeStrength: -800,
-        collideRadius: 80
+        linkDistance: 250, // Increased for knowledge graphs
+        chargeStrength: -1000, // Stronger repulsion
+        collideRadius: 120 // Larger collision radius
       }
     );
     
@@ -76,14 +76,14 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         
         const dx = targetX - sourceX;
         const dy = targetY - sourceY;
-        const dr = Math.sqrt(dx * dx + dy * dy);
+        const dr = Math.sqrt(dx * dx + dy * dy) * 1.5; // More curved lines
         
         // Direct path for self-loops
         if (d.source === d.target) {
           return `M${sourceX},${sourceY} A1,1 0 0,1 ${targetX},${targetY}`;
         }
         
-        // Curved path for normal links
+        // Curved path for normal links - use a smoother curve
         return `M${sourceX},${sourceY} A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
       });
 
@@ -97,7 +97,7 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
         .attr("y", (d: any) => {
           const sourceY = d.source.y || 0;
           const targetY = d.target.y || 0;
-          return (sourceY + targetY) / 2;
+          return (sourceY + targetY) / 2 - 10; // Position labels above the line
         });
 
       // Update node group positions
@@ -107,15 +107,15 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
 
     // Add a zoom handler with better initial zoom
     const zoomHandler = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.3, 3])
+      .scaleExtent([0.2, 4]) // Allow more zoom out/in for knowledge graphs
       .on("zoom", (event) => {
         g.attr("transform", event.transform);
       });
 
     svg.call(zoomHandler);
     
-    // Initial zoom to fit the graph better
-    const initialZoom = 0.9; // Zoom out slightly
+    // Initial zoom to fit the graph better for knowledge graphs
+    const initialZoom = 0.8; // Zoom out more
     const initialTransform = d3.zoomIdentity
       .translate(containerWidth / 2, height / 2)
       .scale(initialZoom)
@@ -137,14 +137,13 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     window.addEventListener("resize", handleResize);
 
     // Start simulation with higher alpha for better initial layout
-    simulation.alpha(0.8).restart();
+    simulation.alpha(1).restart();
     
-    // Stop simulation after 3 seconds to save resources, 
-    // but leave it running longer initially for better layout
+    // Run the simulation longer for knowledge graphs for better layout
     setTimeout(() => {
       simulation.stop();
       console.log('Stopped simulation to save resources');
-    }, 3000);
+    }, 5000); // Increased from 3000 to 5000 ms
 
     return () => {
       simulation.stop();

@@ -18,8 +18,8 @@ export const useNodeRenderer = (
 ) => {
   // Color scale for node types
   const color = d3.scaleOrdinal<string>()
-    .domain(["outcome", "factor", "intervention", "Entity"])
-    .range(["#ef4444", "#f59e0b", "#3b82f6", "#10b981"]);
+    .domain(["outcome", "factor", "intervention", "entity", "Entity"])
+    .range(["#ef4444", "#f59e0b", "#3b82f6", "#10b981", "#8B5CF6"]);
 
   // Create node groups
   const nodeGroup = g.append("g")
@@ -35,10 +35,10 @@ export const useNodeRenderer = (
 
   // Add node circles
   const node = nodeGroup.append("circle")
-    .attr("r", 20)
+    .attr("r", 25) // Increased radius for better visibility
     .attr("fill", (d: any): string => {
       // Get color based on node type, with proper type casting
-      const nodeType = d.type ? cleanTextFn(d.type) : "Entity";
+      const nodeType = d.type ? cleanTextFn(d.type).toLowerCase() : "entity";
       return color(nodeType);
     })
     .attr("stroke", "#fff")
@@ -50,37 +50,45 @@ export const useNodeRenderer = (
     .attr("font-size", "12px")
     .attr("font-weight", "bold")
     .attr("dx", 0)
-    .attr("dy", 30)
+    .attr("dy", 0) // Center text in the node
     .attr("text-anchor", "middle")
-    .attr("fill", "#333")
+    .attr("dominant-baseline", "middle") // Vertically center text
+    .attr("fill", "#fff") // White text for better visibility
     .each(function(d: any) {
       // Wrap long text labels
       const text = d3.select(this);
-      const words = cleanTextFn(d.label).split(/\s+/).reverse();
+      const words = cleanTextFn(d.label).split(/\s+/);
       const lineHeight = 1.1; // ems
-      const y = text.attr("dy");
-      const dy = parseFloat(y);
-      let word;
-      let line: string[] = [];
-      let lineNumber = 0;
-      let tspan = text.text(null).append("tspan").attr("x", 0).attr("y", 0).attr("dy", dy + "px");
       
-      // Create multiple lines for long labels
-      while (word = words.pop()) {
-        line.push(word);
-        tspan.text(line.join(" "));
-        if (line.join(" ").length > 15) { // Adjust this value based on your needs
-          line.pop();
-          tspan.text(line.join(" "));
-          line = [word];
-          tspan = text.append("tspan").attr("x", 0).attr("y", 0).attr("dy", (++lineNumber * lineHeight + dy) + "px").text(word);
-        }
+      // Clear initial text
+      text.text(null);
+      
+      if (words.length === 1) {
+        // For single words, just set the text
+        text.append("tspan")
+          .attr("x", 0)
+          .attr("y", 0)
+          .text(words[0]);
+      } else {
+        // For multiple words, wrap on two lines
+        const firstLine = words.slice(0, Math.ceil(words.length / 2)).join(" ");
+        const secondLine = words.slice(Math.ceil(words.length / 2)).join(" ");
+        
+        text.append("tspan")
+          .attr("x", 0)
+          .attr("y", -6)
+          .text(firstLine);
+        
+        text.append("tspan")
+          .attr("x", 0)
+          .attr("y", 6)
+          .text(secondLine);
       }
     });
 
   // Add tooltips for nodes
   node.append("title")
-    .text((d: any) => `${cleanTextFn(d.label)} (${cleanTextFn(d.type) || "Unknown Type"})`);
+    .text((d: any) => `${cleanTextFn(d.label)} (${cleanTextFn(d.type) || "Entity"})`);
 
   return { nodeGroup, node, nodeLabels };
 };

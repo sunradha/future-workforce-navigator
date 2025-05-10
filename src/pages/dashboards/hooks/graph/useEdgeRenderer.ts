@@ -15,10 +15,10 @@ export const useEdgeRenderer = (
     .append("marker")
     .attr("id", d => d)
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 28)  // Increased offset so that the arrow doesn't overlap the node
+    .attr("refX", 35)  // Increased offset to avoid overlap with larger nodes
     .attr("refY", 0)
-    .attr("markerWidth", 6)
-    .attr("markerHeight", 6)
+    .attr("markerWidth", 8)
+    .attr("markerHeight", 8)
     .attr("orient", "auto")
     .append("path")
     .attr("d", "M0,-5L10,0L0,5")
@@ -32,12 +32,12 @@ export const useEdgeRenderer = (
     .enter()
     .append("path")
     .attr("stroke", "#666")
-    .attr("stroke-opacity", 0.8)  // Increased opacity
-    .attr("stroke-width", 2)
+    .attr("stroke-opacity", 0.8)
+    .attr("stroke-width", 2.5) // Thicker lines
     .attr("fill", "none")
     .attr("marker-end", "url(#arrow)");
   
-  // Add edge labels - use all edges for causal graphs as they're important
+  // Add edge labels with better positioning
   const linkLabels = g.append("g")
     .attr("class", "link-labels")
     .selectAll("text")
@@ -46,18 +46,17 @@ export const useEdgeRenderer = (
     .append("text")
     .text(d => cleanTextFn(d.relationship))
     .attr("font-size", "11px")
+    .attr("font-weight", "bold")
     .attr("text-anchor", "middle")
-    .attr("fill", "#555")
-    .attr("dy", "-5")
+    .attr("fill", "#333")
+    .attr("dy", "-8") // Move text above the line
     .attr("background", "white");
   
   // Add white background rectangle for better readability
-  // Fixed: Proper handling of the parent selection
   linkLabels.each(function() {
     const bbox = this.getBBox();
-    const padding = 2;
+    const padding = 3;
     
-    // Properly select the parent node using d3.select(this.parentNode)
     const parentGroup = d3.select(this.parentNode as Element);
     
     parentGroup.insert("rect", "text")
@@ -66,7 +65,9 @@ export const useEdgeRenderer = (
       .attr("width", bbox.width + (padding * 2))
       .attr("height", bbox.height + (padding * 2))
       .attr("fill", "white")
-      .attr("fill-opacity", 0.7);
+      .attr("rx", 3) // Rounded corners
+      .attr("ry", 3)
+      .attr("fill-opacity", 0.9);
   });
 
   return { link, linkLabels };
