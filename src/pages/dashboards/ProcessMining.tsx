@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +17,7 @@ const questionsByCategory = {
   ],
   causalGraph: [
     "What interventions would have the highest causal impact on successful reskilling?",
-    "What are the factors that contribute to lower certification rates in low-budget sectors?",
+    "How do training program outcomes influence subsequent enrollment in other programs or certifications?",
     "Do skill category and sector investment jointly influence training program success?",
     "What factors lead to employee training failures or dropouts, and how do these failures impact later performance or retention?"
   ],
