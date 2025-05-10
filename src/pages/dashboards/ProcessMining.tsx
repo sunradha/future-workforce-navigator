@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -16,11 +15,10 @@ const questionsByCategory = {
     "How do different sectors invest in skill categories and training programs, and how are these mapped to occupations and employees?"
   ],
   causalGraph: [
-    "Which sectors have consistently maintained or increased investment in training programs over the years?",
-    "In which sectors has investment in training declined over the years?",
-    "Which job roles across sectors are at the highest risk of automation?",
-    "Which local authorities in England face a higher risk of job automation compared to others?",
-    "Which training programs should be prioritized to address automation risks across industries?"
+    "What interventions would have the highest causal impact on successful reskilling?",
+    "What are the factors that contribute to lower certification rates in low-budget sectors?",
+    "Do skill category and sector investment jointly influence training program success?",
+    "What factors lead to employee training failures or dropouts, and how do these failures impact later performance or retention?"
   ],
   processMining: [
     "What is the typical progression of employees through training programs?",
