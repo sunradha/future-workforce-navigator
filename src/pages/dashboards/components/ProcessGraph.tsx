@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Network } from 'lucide-react';
 
 interface ProcessGraphProps {
   graphData: string;
@@ -7,26 +8,27 @@ interface ProcessGraphProps {
 }
 
 const ProcessGraph = ({ graphData, title }: ProcessGraphProps) => {
-  // Check if the graphData is a base64 image or JSON string with nodes and edges
-  const isBase64 = !graphData.includes('{');
+  const parsedData = JSON.parse(graphData);
+  const nodes = parsedData.nodes || [];
+  const edges = parsedData.edges || [];
   
   return (
-    <div className="overflow-x-auto w-full">
-      {title && <h3 className="text-lg font-medium mb-2">{title}</h3>}
-      {isBase64 ? (
-        <img 
-          src={`data:image/png;base64,${graphData}`}
-          alt="Process Mining Graph"
-          className="w-full h-auto object-contain"
-        />
-      ) : (
-        // For process_flow and other node/edge type visualizations
-        <div className="border rounded-md p-4 bg-gray-50 dark:bg-gray-800">
-          <pre className="text-xs overflow-auto max-h-[500px]">
-            {JSON.stringify(JSON.parse(graphData), null, 2)}
-          </pre>
-        </div>
-      )}
+    <div className="w-full h-full p-5 bg-gray-900 rounded-lg border border-gray-800 shadow-md">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-base font-medium flex items-center gap-2 text-green-400">
+          <Network className="h-5 w-5" />
+          {title || "Process Flow"}
+        </h3>
+        <span className="text-xs text-gray-400">
+          {nodes.length} nodes • {edges.length} connections
+        </span>
+      </div>
+      
+      <div className="w-full overflow-hidden rounded-md bg-gray-800 p-4" style={{ minHeight: "400px" }}>
+        <pre className="text-xs overflow-auto max-h-[500px] text-gray-200">
+          {JSON.stringify(parsedData, null, 2)}
+        </pre>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ProcessMiningResponse } from '@/services/ProcessMiningService';
 import ProcessGraph from '../ProcessGraph';
@@ -179,11 +178,7 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
       
       {/* Process Flow Chart */}
       {hasProcessFlowChart && (
-        <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
-          <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-            <Route className="h-4 w-4 text-green-500" />
-            Process Flow
-          </h3>
+        <div className="w-full">
           <ProcessGraph 
             graphData={results.result.chart.data.nodes && results.result.chart.data.edges ? 
               JSON.stringify({ nodes: results.result.chart.data.nodes, edges: results.result.chart.data.edges }) : 
