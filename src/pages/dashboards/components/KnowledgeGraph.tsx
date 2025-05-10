@@ -76,7 +76,7 @@ const KnowledgeGraph = ({
     setTimeout(() => setIsLoading(false), 300);
   }, [nodes, edges, isSchema]);
 
-  // Use the simplified D3 graph hook
+  // Use the D3 graph hook
   useD3Graph({
     svgRef,
     nodes: processedNodes,
