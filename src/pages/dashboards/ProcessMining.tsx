@@ -10,11 +10,10 @@ import AnalysisResults from './components/AnalysisResults';
 // Questions organized by category
 const questionsByCategory = {
   knowledgeGraph: [
-    "What are the key concepts in the training dataset?",
-    "How are different training programs connected?",
-    "What relationships exist between skills and job roles?",
-    "How do training budgets relate to different sectors?",
-    "What connections exist between employee skills and training outcomes?"
+    "How are employees, their occupations, skill categories, training programs, and sectors connected in the reskilling ecosystem?",
+    "Show the connections between employees, their occupations, industries, skills, and locations?",
+    "How are training programs linked to occupations and skill categories, and which sectors invest the most in workforce reskilling?",
+    "How do different sectors invest in skill categories and training programs, and how are these mapped to occupations and employees?"
   ],
   causalGraph: [
     "Which sectors have consistently maintained or increased investment in training programs over the years?",
