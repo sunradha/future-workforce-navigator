@@ -12,7 +12,7 @@ import { useValidationUtils } from './graph/useValidationUtils';
 
 export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) => {
   useEffect(() => {
-    if (!svgRef.current || !nodes.length || !edges.length) {
+    if (!svgRef.current || !nodes.length) {
       console.log("Missing required data for graph:", { 
         svgRef: !!svgRef.current, 
         nodesLength: nodes.length, 
@@ -36,8 +36,11 @@ export const useD3Graph = ({ svgRef, nodes, edges, height }: UseD3GraphProps) =>
     // Validate edges against nodes
     const validEdges = validateEdges(edges, nodes);
     
-    if (validEdges.length === 0) {
+    console.log("Valid edges for rendering:", validEdges.length);
+    
+    if (validEdges.length === 0 && nodes.length > 0) {
       // Render fallback when there are no valid connections
+      console.log("No valid edges found, rendering fallback layout");
       useFallbackRenderer(g, nodes, height, cleanText);
       return;
     }

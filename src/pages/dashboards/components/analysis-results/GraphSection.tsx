@@ -54,14 +54,6 @@ const GraphSection: React.FC<GraphSectionProps> = ({ results }) => {
     originalNodes: chartData?.nodes,
     originalEdges: chartData?.edges
   });
-  
-  // Validate that we have valid nodes and edges
-  const validGraph = nodes.length > 0 && edges.length > 0;
-  
-  if (!validGraph) {
-    console.error("Invalid graph data:", { nodes, edges });
-    return null;
-  }
 
   return (
     <div className="space-y-6">

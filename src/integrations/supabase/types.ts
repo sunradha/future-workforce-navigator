@@ -738,6 +738,39 @@ export type Database = {
           },
         ]
       }
+      workforce_reskilling_cases_backup: {
+        Row: {
+          case_id: number
+          certification_earned: boolean | null
+          completion_date: string | null
+          employee_id: number | null
+          skill_category: string | null
+          soc_code: number | null
+          start_date: string | null
+          training_program: string | null
+        }
+        Insert: {
+          case_id: number
+          certification_earned?: boolean | null
+          completion_date?: string | null
+          employee_id?: number | null
+          skill_category?: string | null
+          soc_code?: number | null
+          start_date?: string | null
+          training_program?: string | null
+        }
+        Update: {
+          case_id?: number
+          certification_earned?: boolean | null
+          completion_date?: string | null
+          employee_id?: number | null
+          skill_category?: string | null
+          soc_code?: number | null
+          start_date?: string | null
+          training_program?: string | null
+        }
+        Relationships: []
+      }
       workforce_reskilling_events: {
         Row: {
           activity: string | null
@@ -778,6 +811,39 @@ export type Database = {
             referencedColumns: ["case_id"]
           },
         ]
+      }
+      workforce_reskilling_events_backup: {
+        Row: {
+          activity: string | null
+          actor: string | null
+          case_id: number | null
+          completion_status: string | null
+          event_id: number
+          score: number | null
+          skill_category: string | null
+          timestamp: string | null
+        }
+        Insert: {
+          activity?: string | null
+          actor?: string | null
+          case_id?: number | null
+          completion_status?: string | null
+          event_id: number
+          score?: number | null
+          skill_category?: string | null
+          timestamp?: string | null
+        }
+        Update: {
+          activity?: string | null
+          actor?: string | null
+          case_id?: number | null
+          completion_status?: string | null
+          event_id?: number
+          score?: number | null
+          skill_category?: string | null
+          timestamp?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
