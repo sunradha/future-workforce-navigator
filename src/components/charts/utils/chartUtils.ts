@@ -16,6 +16,12 @@ export const transformApiData = (apiData: any, chartType: string): any[] => {
     return apiData;
   }
 
+  // Handle multi-series time series data format
+  if (chartType === 'multi-series_time_series_chart' && Array.isArray(apiData)) {
+    // Data is already in the right format
+    return apiData;
+  }
+
   // Handle comparative_bar chart data format (categories and series)
   if (apiData && apiData.categories && apiData.series && chartType === 'comparative_bar') {
     // Filter out null values and transform the data
@@ -49,7 +55,7 @@ export const transformApiData = (apiData: any, chartType: string): any[] => {
       .filter((item: any) => item.name && item.name !== 'null');
   }
 
-  // Handle time series data format - this is the format we're fixing
+  // Handle time series data format
   if (apiData && apiData.x && apiData.y) {
     console.log('Transforming time series data:', apiData);
     
@@ -65,7 +71,6 @@ export const transformApiData = (apiData: any, chartType: string): any[] => {
       if (!year || !sector || sector === "Total") continue;
       
       // Get the value from a third array if present, otherwise use a default
-      // We'll need to update this when we know the actual structure of the value data
       const value = apiData.values && apiData.values[i] ? apiData.values[i] : 
                    (apiData.total_investment && apiData.total_investment[i] ? apiData.total_investment[i] : 
                    // Generate a random value between 50M and 100M for testing if no value provided

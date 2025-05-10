@@ -7,12 +7,13 @@ import PieChart from './charts/PieChart';
 import TimeSeriesChart from './charts/TimeSeriesChart';
 import ComparativeBarChart from './charts/ComparativeBarChart';
 import RankingChart from './charts/RankingChart';
+import MultiSeriesTimeSeriesChart from './charts/MultiSeriesTimeSeriesChart';
 import { transformApiData } from './charts/utils/chartUtils';
 
 interface ChartCardProps {
   title: string;
   subtitle?: string;
-  type: 'bar' | 'pie' | 'time_series' | 'ranking' | 'comparative_bar';
+  type: 'bar' | 'pie' | 'time_series' | 'ranking' | 'comparative_bar' | 'multi-series_time_series_chart';
   data: ChartData | BarData | any; // Allow for API response format
   colors?: string[];
   showLegend?: boolean;
@@ -33,7 +34,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   className = '',
 }) => {
   // Transform the data if needed
-  const chartData = transformApiData(data, type);
+  const chartData = type === 'multi-series_time_series_chart' ? data : transformApiData(data, type);
 
   console.log("ChartCard rendering with type:", type, "and data:", chartData);
 
@@ -85,6 +86,15 @@ const ChartCard: React.FC<ChartCardProps> = ({
 
           {type === 'time_series' && (
             <TimeSeriesChart 
+              data={chartData} 
+              colors={colors} 
+              showLegend={showLegend} 
+              height={height} 
+            />
+          )}
+          
+          {type === 'multi-series_time_series_chart' && (
+            <MultiSeriesTimeSeriesChart 
               data={chartData} 
               colors={colors} 
               showLegend={showLegend} 

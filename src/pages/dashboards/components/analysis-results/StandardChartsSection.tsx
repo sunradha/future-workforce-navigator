@@ -15,11 +15,16 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
   // Check if there's chart data to display
   const hasStandardChartData = results.result.chart && 
     results.result.chart.data &&
-    !['knowledge_graph', 'causal_graph', 'time_series', 'ranking', 'comparative_bar'].includes(results.result.chart.type || '');
+    !['knowledge_graph', 'causal_graph', 'time_series', 'multi-series_time_series_chart', 'ranking', 'comparative_bar'].includes(results.result.chart.type || '');
 
   // Check if there's time series data to display
   const hasTimeSeriesChart = results.result.chart && 
     results.result.chart.type === 'time_series' && 
+    results.result.chart.data;
+    
+  // Check if there's multi-series time series data to display
+  const hasMultiSeriesTimeSeriesChart = results.result.chart && 
+    results.result.chart.type === 'multi-series_time_series_chart' && 
     results.result.chart.data;
     
   // Check if there's ranking data to display
@@ -32,7 +37,7 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
     results.result.chart.type === 'comparative_bar' &&
     results.result.chart.data;
     
-  const hasAnyChart = hasStandardChartData || hasTimeSeriesChart || hasRankingChart || hasComparativeBarChart;
+  const hasAnyChart = hasStandardChartData || hasTimeSeriesChart || hasRankingChart || hasComparativeBarChart || hasMultiSeriesTimeSeriesChart;
   const hasKnowledgeGraph = results.result.chart && 
     ['knowledge_graph', 'causal_graph'].includes(results.result.chart.type || '') && 
     results.result.chart.data;
@@ -93,6 +98,24 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
       subtitle: "Trends over time"
     };
   };
+  
+  // Function to determine title and subtitle for multi-series time series charts
+  const getMultiSeriesTimeSeriesChartTitle = () => {
+    const query = results.result.reasoning_answer?.toLowerCase() || '';
+    
+    if (query.includes('training budgets') || query.includes('investment')) {
+      return {
+        title: "Training Investment Trends by Sector (2011-2022)",
+        subtitle: "Sector investment comparison over time"
+      };
+    }
+    
+    // Default title
+    return {
+      title: "Multi-Series Time Analysis",
+      subtitle: "Multiple trends over time"
+    };
+  };
 
   return (
     <div className="grid gap-3 grid-cols-1">
@@ -128,6 +151,20 @@ const StandardChartsSection: React.FC<StandardChartsSectionProps> = ({ results }
             title={getTimeSeriesChartTitle().title}
             subtitle={getTimeSeriesChartTitle().subtitle}
             type="time_series"
+            data={results.result.chart.data}
+            height={400}
+            className="w-full"
+          />
+        </div>
+      )}
+      
+      {/* Multi-Series Time Series Chart */}
+      {hasMultiSeriesTimeSeriesChart && (
+        <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm w-full">
+          <ChartCard
+            title={getMultiSeriesTimeSeriesChartTitle().title}
+            subtitle={getMultiSeriesTimeSeriesChartTitle().subtitle}
+            type="multi-series_time_series_chart"
             data={results.result.chart.data}
             height={400}
             className="w-full"
