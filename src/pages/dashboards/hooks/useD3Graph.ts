@@ -174,19 +174,13 @@ export const useD3Graph = ({
       .append("g")
       .attr("class", "node-group");
 
-    // COMPLETELY REDESIGNED DRAG BEHAVIOR
     // Define separate drag behavior for nodes that won't interfere with zoom
     const dragHandler = d3.drag<SVGGElement, any>()
       .on("start", function(event, d) {
         // Stop event propagation to prevent zoom behavior
         event.sourceEvent.stopPropagation();
         
-        if (!event.active) {
-          // Restart simulation with low alpha for smoother movement
-          simulation.alphaTarget(0.2).restart();
-        }
-        
-        // Fix node position at current coordinates
+        if (!event.active) simulation.alphaTarget(0.2).restart();
         d.fx = d.x;
         d.fy = d.y;
         
@@ -208,14 +202,9 @@ export const useD3Graph = ({
         // Stop event propagation to prevent zoom behavior
         event.sourceEvent.stopPropagation();
         
-        if (!event.active) {
-          // Cool down simulation gently
-          simulation.alphaTarget(0);
-        }
+        if (!event.active) simulation.alphaTarget(0);
         
-        // Keep the node fixed at final position (DO NOT reset fx/fy)
-        // This is crucial for maintaining node positions after drag
-        
+        // Keep the node fixed at final position
         // Remove "dragging" class
         d3.select(this).classed("dragging", false);
       });
@@ -465,13 +454,39 @@ export const useD3Graph = ({
     // Update positions immediately after simulation
     updatePositions();
     
+    // NEW CODE: Calculate the bounding box of all nodes to center properly
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    
+    nodes.forEach(node => {
+      if (!node.x || !node.y) return;
+      
+      minX = Math.min(minX, node.x - nodeRadius);
+      maxX = Math.max(maxX, node.x + nodeRadius);
+      minY = Math.min(minY, node.y - nodeRadius);
+      maxY = Math.max(maxY, node.y + nodeRadius);
+    });
+    
+    // Calculate the graph dimensions and required scale
+    const graphWidth = maxX - minX;
+    const graphHeight = maxY - minY;
+    const graphCenterX = minX + graphWidth / 2;
+    const graphCenterY = minY + graphHeight / 2;
+    
+    // Calculate scale to fit the entire graph with some padding
+    const padding = 40; // Padding around the graph
+    const scaleX = (width - padding * 2) / graphWidth;
+    const scaleY = (height - padding * 2) / graphHeight;
+    const scale = Math.min(scaleX, scaleY, 1); // Don't zoom in beyond 100%
+    
     // Apply initial zoom to ensure everything is visible
-    const initialScale = 0.85; // Slightly zoomed out
     svg.call(zoom.transform as any, 
       d3.zoomIdentity
         .translate(width/2, height/2)
-        .scale(initialScale)
-        .translate(-width/2, -height/2)
+        .scale(scale)
+        .translate(-graphCenterX, -graphCenterY)
     );
 
     // Let the simulation run for a bit to better position elements
@@ -482,7 +497,8 @@ export const useD3Graph = ({
     simulation.on('tick', updatePositions);
     
     // Log successful rendering
-    console.log("Graph rendered successfully with", nodes.length, "nodes and", edges.length, "edges");
+    console.log("Graph rendered successfully with", nodes.length, "nodes and", edges.length, "edges", 
+      "scale:", scale, "center:", graphCenterX, graphCenterY);
     
   }, [svgRef, nodes, edges, height, darkMode, colorScale]);
 
