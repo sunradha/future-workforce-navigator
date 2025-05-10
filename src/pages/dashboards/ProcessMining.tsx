@@ -21,11 +21,7 @@ const questionsByCategory = {
     "What factors lead to employee training failures or dropouts, and how do these failures impact later performance or retention?"
   ],
   processMining: [
-    "What is the typical progression of employees through training programs?",
-    "Which training programs had the highest number of incomplete cases?",
-    "What is the average time taken to complete training programs across industries?",
-    "How have all training programs performed in the last one year?",
-    "Which training program had the most variations in completion paths?"
+    "What is the typical progression through training programs?"
   ],
   generalAnalytics: [
     "How have training budgets varied over the years? Is there a trend of increase or decrease?",
