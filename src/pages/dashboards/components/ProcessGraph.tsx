@@ -8,15 +8,25 @@ interface ProcessGraphProps {
   title?: string;
 }
 
-// Define color palette for different process node types
+// Define color palette for different process node types with more distinctive colors
 const NODE_COLORS = {
   'start': '#10b981',         // Green for starting nodes
-  'training': '#8B5CF6',      // Purple for training nodes
+  'training': '#8B5CF6',      // Purple for training programs
   'skill': '#3b82f6',         // Blue for skill nodes
   'certification': '#f59e0b', // Yellow for certification nodes
   'outcome': '#ef4444',       // Red for outcome nodes
   'process': '#6366f1',       // Indigo for general process nodes
   'transition': '#ec4899',    // Pink for transition nodes
+  'intro': '#06b6d4',         // Cyan for intro nodes
+  'course': '#8B5CF6',        // Purple for course nodes
+  'project': '#f97316',       // Orange for project nodes
+  'management': '#84cc16',    // Lime for management nodes
+  'analysis': '#14b8a6',      // Teal for analysis nodes
+  'service': '#f43f5e',       // Rose for service nodes
+  'leadership': '#8b5cf6',    // Violet for leadership nodes
+  'compliance': '#0891b2',    // Cyan-blue for compliance nodes
+  'methodology': '#d946ef',   // Fuchsia for methodology nodes
+  'learning': '#0ea5e9',      // Sky blue for learning nodes
   'default': '#8B5CF6'        // Default purple
 };
 
@@ -35,17 +45,19 @@ const ProcessGraph = ({ graphData, title }: ProcessGraphProps) => {
       const nodes = parsedData.nodes || [];
       const edges = parsedData.edges || [];
       
-      // Process nodes to ensure they have required properties and assign color types
+      // Enhanced type detection logic for nodes
       const preparedNodes = nodes.map(node => {
-        // Determine node type from data or infer from label if possible
+        // Start with any explicitly defined type
         let nodeType = (node.type || '').toLowerCase();
         
         // If no type is specified, try to infer from the node label
         if (!nodeType && node.label) {
           const label = node.label.toLowerCase();
+          
+          // Enhanced type inference with more specific categories
           if (label.includes('start') || label.includes('begin')) {
             nodeType = 'start';
-          } else if (label.includes('training') || label.includes('course') || label.includes('learning')) {
+          } else if (label.includes('training') || label.includes('course')) {
             nodeType = 'training';
           } else if (label.includes('skill') || label.includes('competency')) {
             nodeType = 'skill';
@@ -55,6 +67,34 @@ const ProcessGraph = ({ graphData, title }: ProcessGraphProps) => {
             nodeType = 'outcome';
           } else if (label.includes('transition') || label.includes('move')) {
             nodeType = 'transition';
+          } else if (label.includes('intro') || label.includes('introduction')) {
+            nodeType = 'intro';
+          } else if (label.includes('project')) {
+            nodeType = 'project';
+          } else if (label.includes('management')) {
+            nodeType = 'management';
+          } else if (label.includes('analysis') || label.includes('analytics')) {
+            nodeType = 'analysis';
+          } else if (label.includes('service')) {
+            nodeType = 'service';
+          } else if (label.includes('compliance')) {
+            nodeType = 'compliance';
+          } else if (label.includes('methodology')) {
+            nodeType = 'methodology';
+          } else if (label.includes('learning')) {
+            nodeType = 'learning';
+          } else if (label.includes('excel')) {
+            nodeType = 'skill';
+          } else if (label.includes('speaking') || label.includes('communication')) {
+            nodeType = 'skill';
+          } else if (label.includes('agile')) {
+            nodeType = 'methodology';
+          } else if (label.includes('customer')) {
+            nodeType = 'service';
+          } else if (label.includes('security') || label.includes('cyber')) {
+            nodeType = 'certification';
+          } else if (label.includes('conflict')) {
+            nodeType = 'skill';
           } else {
             nodeType = 'process';
           }
@@ -89,14 +129,14 @@ const ProcessGraph = ({ graphData, title }: ProcessGraphProps) => {
     }
   }, [graphData]);
   
-  // Use the D3 graph hook
+  // Use the D3 graph hook with our custom color scale
   useD3Graph({
     svgRef,
     nodes: processedNodes,
     edges: processedEdges,
     height: 500,
-    darkMode: true, // Enable dark mode
-    colorScale: NODE_COLORS  // Pass our custom color scale
+    darkMode: true,
+    colorScale: NODE_COLORS  // Pass our enhanced color scale
   });
   
   return (

@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Node, Edge } from '../types/knowledgeGraphTypes';
@@ -8,7 +9,7 @@ interface UseD3GraphProps {
   edges: Edge[];
   height: number;
   darkMode?: boolean;
-  colorScale?: Record<string, string>;  // Added colorScale parameter
+  colorScale?: Record<string, string>;
 }
 
 export const useD3Graph = ({ 
@@ -55,18 +56,34 @@ export const useD3Graph = ({
     // Calculate node radius - we'll use this for arrow positioning
     const nodeRadius = 45;
 
-    // Define arrow marker for directed edges - FIX: Adjust marker position and size
-    svg.append("defs").append("marker")
-      .attr("id", "arrowhead")
+    // Create multiple arrow markers with different IDs for different curve types
+    const defs = svg.append("defs");
+    
+    // Normal arrow marker for straight lines
+    defs.append("marker")
+      .attr("id", "arrowhead-straight")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", nodeRadius + 5) // Position closer to target node edge
+      .attr("refX", nodeRadius + 3) // Position closer to target node edge
       .attr("refY", 0)
       .attr("orient", "auto")
-      .attr("markerWidth", 8) // Slightly larger
-      .attr("markerHeight", 8) // Slightly larger
+      .attr("markerWidth", 8)
+      .attr("markerHeight", 8)
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", darkMode ? "#FFFFFF" : "#666"); // White arrows in dark mode
+      .attr("fill", darkMode ? "#FFFFFF" : "#666");
+      
+    // Arrow marker for curved lines
+    defs.append("marker")
+      .attr("id", "arrowhead-curved")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", nodeRadius + 5) // Position slightly further for curved lines
+      .attr("refY", 0)
+      .attr("orient", "auto")
+      .attr("markerWidth", 8)
+      .attr("markerHeight", 8)
+      .append("path")
+      .attr("d", "M0,-5L10,0L0,5")
+      .attr("fill", darkMode ? "#FFFFFF" : "#666");
 
     // Create a color scale for node types - use custom colors if provided
     const defaultColorScale = d3.scaleOrdinal()
@@ -95,7 +112,7 @@ export const useD3Graph = ({
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collide", d3.forceCollide().radius(80)); // Increased collision radius
 
-    // Draw the links - FIX: Improved edge connections with proper path calculation
+    // Draw the links - Improved edge connections with proper path calculation
     const link = g.append("g")
       .selectAll("path")
       .data(edges)
@@ -104,7 +121,6 @@ export const useD3Graph = ({
       .attr("stroke", darkMode ? "#FFFFFF" : "#666") // White edge color in dark mode
       .attr("stroke-opacity", 0.7)
       .attr("stroke-width", 2.5)
-      .attr("marker-end", "url(#arrowhead)")
       .attr("fill", "none");
 
     // Draw link labels - with improved background
@@ -114,7 +130,7 @@ export const useD3Graph = ({
       .enter()
       .append("g");
 
-    // Add background for link labels (darker in dark mode)
+    // Add background for link labels
     linkLabels.append("rect")
       .attr("fill", darkMode ? "rgba(40, 44, 52, 0.9)" : "rgba(240, 240, 240, 0.9)") 
       .attr("rx", 4)
@@ -202,7 +218,7 @@ export const useD3Graph = ({
     nodeGroups.append("title")
       .text(d => `${d.label} (${d.type || 'Entity'})`);
 
-    // Function to update positions of all elements - FIX: Improved edge path calculation
+    // Function to update positions of all elements - Improved edge path calculation
     function updatePositions() {
       // Update link paths with improved arrow positioning
       link.attr("d", (d: any) => {
@@ -219,34 +235,70 @@ export const useD3Graph = ({
         const dx = targetX - sourceX;
         const dy = targetY - sourceY;
         const angle = Math.atan2(dy, dx);
+        const distance = Math.sqrt(dx * dx + dy * dy);
         
         // Calculate points on the circumference of source and target nodes
         const sourceNodeEdgeX = sourceX + Math.cos(angle) * nodeRadius;
         const sourceNodeEdgeY = sourceY + Math.sin(angle) * nodeRadius;
         
         // For the target, we calculate backwards to ensure the arrow connects properly
-        const targetNodeEdgeX = targetX - Math.cos(angle) * nodeRadius;
-        const targetNodeEdgeY = targetY - Math.sin(angle) * nodeRadius;
+        const targetNodeEdgeX = targetX - Math.cos(angle) * (nodeRadius + 2); // Add small offset for better arrow connection
+        const targetNodeEdgeY = targetY - Math.sin(angle) * (nodeRadius + 2);
         
-        // Choose between curved or straight lines based on distance
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        // Choose between curved or straight lines based on relationship and distance
+        const isBidirectional = edges.some((otherEdge: any) => 
+          (otherEdge.source.id === d.target.id && otherEdge.target.id === d.source.id) ||
+          (otherEdge !== d && otherEdge.source.id === d.source.id && otherEdge.target.id === d.target.id)
+        );
         
-        if (distance > nodeRadius * 4) {
-          // Use a subtle curve for longer distances
-          const curvature = 0.2;
+        // Different curve strategy based on relationship and distance
+        if (isBidirectional || distance < nodeRadius * 4) {
+          // Use more pronounced curves for shorter distances or bidirectional relationships
+          const curvature = distance < nodeRadius * 3 ? 0.4 : 0.2;
           const midX = (sourceNodeEdgeX + targetNodeEdgeX) / 2;
           const midY = (sourceNodeEdgeY + targetNodeEdgeY) / 2;
           const offX = midX + curvature * (targetNodeEdgeY - sourceNodeEdgeY);
           const offY = midY - curvature * (targetNodeEdgeX - sourceNodeEdgeX);
           
+          // Use the curved arrow marker
+          d3.select(this).attr("marker-end", "url(#arrowhead-curved)");
+          
           return `M${sourceNodeEdgeX},${sourceNodeEdgeY} Q${offX},${offY} ${targetNodeEdgeX},${targetNodeEdgeY}`;
         } else {
-          // Use straight lines for shorter distances
+          // Use straight lines for longer distances with no bidirectional relationship
+          // Use the straight arrow marker
+          d3.select(this).attr("marker-end", "url(#arrowhead-straight)");
+          
           return `M${sourceNodeEdgeX},${sourceNodeEdgeY} L${targetNodeEdgeX},${targetNodeEdgeY}`;
         }
       });
       
-      // Update link label positions
+      // Set appropriate marker-end for all paths (this fixes the arrow issue)
+      link.each(function(d: any) {
+        const path = d3.select(this);
+        const source = d.source;
+        const target = d.target;
+        
+        if (source && target) {
+          const dx = target.x - source.x;
+          const dy = target.y - source.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          // Check if there are bidirectional edges
+          const isBidirectional = edges.some((otherEdge: any) => 
+            (otherEdge.source.id === target.id && otherEdge.target.id === source.id) ||
+            (otherEdge !== d && otherEdge.source.id === source.id && otherEdge.target.id === target.id)
+          );
+          
+          if (isBidirectional || distance < nodeRadius * 4) {
+            path.attr("marker-end", "url(#arrowhead-curved)");
+          } else {
+            path.attr("marker-end", "url(#arrowhead-straight)");
+          }
+        }
+      });
+      
+      // Update link label positions with improved placement
       linkLabels.attr("transform", (d: any) => {
         if (!d.source || !d.target || d.source.x === undefined || d.target.x === undefined) {
           return "translate(0,0)";
@@ -261,6 +313,7 @@ export const useD3Graph = ({
         const dx = targetX - sourceX;
         const dy = targetY - sourceY;
         const angle = Math.atan2(dy, dx);
+        const distance = Math.sqrt(dx * dx + dy * dy);
         
         // Position the label at the midpoint of the visible line
         const sourceEdgeX = sourceX + Math.cos(angle) * nodeRadius;
@@ -268,16 +321,38 @@ export const useD3Graph = ({
         const targetEdgeX = targetX - Math.cos(angle) * nodeRadius;
         const targetEdgeY = targetY - Math.sin(angle) * nodeRadius;
         
-        const labelX = (sourceEdgeX + targetEdgeX) / 2;
-        const labelY = (sourceEdgeY + targetEdgeY) / 2;
+        // Check if there are bidirectional edges
+        const isBidirectional = edges.some((otherEdge: any) => 
+          (otherEdge.source.id === d.target.id && otherEdge.target.id === d.source.id) ||
+          (otherEdge !== d && otherEdge.source.id === d.source.id && otherEdge.target.id === d.target.id)
+        );
         
-        // Offset to avoid overlapping with the line
-        const perpAngle = angle + Math.PI / 2;
-        const offset = 20;
-        const labelOffsetX = labelX + Math.cos(perpAngle) * offset;
-        const labelOffsetY = labelY + Math.sin(perpAngle) * offset;
+        let labelX, labelY;
         
-        return `translate(${labelOffsetX},${labelOffsetY})`;
+        if (isBidirectional || distance < nodeRadius * 4) {
+          // For bidirectional or close nodes, position label with offset from the midpoint
+          const curvature = distance < nodeRadius * 3 ? 0.4 : 0.2;
+          const midX = (sourceEdgeX + targetEdgeX) / 2;
+          const midY = (sourceEdgeY + targetEdgeY) / 2;
+          
+          // For curved edges, place label at the apex of curve
+          const perpAngle = angle + Math.PI / 2;
+          const curveOffset = distance * curvature;
+          labelX = midX + Math.cos(perpAngle) * curveOffset;
+          labelY = midY + Math.sin(perpAngle) * curveOffset;
+        } else {
+          // For straight lines, position at midpoint with small offset
+          const labelX = (sourceEdgeX + targetEdgeX) / 2;
+          const labelY = (sourceEdgeY + targetEdgeY) / 2;
+          
+          // Offset to avoid overlapping with the line
+          const perpAngle = angle + Math.PI / 2;
+          const offset = 15; // Smaller offset for straight lines
+          labelX = labelX + Math.cos(perpAngle) * offset;
+          labelY = labelY + Math.sin(perpAngle) * offset;
+        }
+        
+        return `translate(${labelX},${labelY})`;
       });
       
       // Update node positions
@@ -289,7 +364,7 @@ export const useD3Graph = ({
     }
     
     // Run the simulation for more iterations to position nodes before first render
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 120; i++) {
       simulation.tick();
     }
     
