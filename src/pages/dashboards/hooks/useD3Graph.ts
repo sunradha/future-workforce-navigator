@@ -40,17 +40,21 @@ export const useD3Graph = ({
       .attr("style", `max-width: 100%; height: auto; background: ${darkMode ? "#1A1F2C" : "#f0f0f0"};`)
       .attr("font-family", "sans-serif");
 
-    // Create a group element for the entire graph
-    const g = svg.append("g");
+    // Create a group element for the entire graph with a unique class for targeting
+    const g = svg.append("g")
+      .attr("class", "graph-container");
 
-    // Add zoom behavior
+    // Add zoom behavior with proper event handling
     const zoom = d3.zoom()
       .scaleExtent([0.1, 3])
       .on("zoom", (event) => {
+        // Only apply zoom transform to the graph container
         g.attr("transform", event.transform);
       });
 
-    svg.call(zoom as any);
+    // Apply zoom behavior to SVG but disable double-click to zoom
+    svg.call(zoom as any)
+      .on("dblclick.zoom", null);
 
     // Calculate node radius - we'll use this for arrow positioning
     const nodeRadius = 45;
@@ -113,10 +117,12 @@ export const useD3Graph = ({
 
     // Draw the links - Improved edge connections with proper path calculation
     const link = g.append("g")
+      .attr("class", "links")
       .selectAll("path")
       .data(edges)
       .enter()
       .append("path")
+      .attr("class", "graph-link")
       .attr("stroke", darkMode ? "#FFFFFF" : "#666") // White edge color in dark mode
       .attr("stroke-opacity", 0.7)
       .attr("stroke-width", 2.5)
@@ -124,10 +130,12 @@ export const useD3Graph = ({
 
     // Draw link labels - with improved background
     const linkLabels = g.append("g")
+      .attr("class", "link-labels")
       .selectAll("g")
       .data(edges)
       .enter()
-      .append("g");
+      .append("g")
+      .attr("class", "link-label");
 
     // Add background for link labels
     linkLabels.append("rect")
@@ -157,21 +165,63 @@ export const useD3Graph = ({
         .attr("height", bbox.height + 12); // More padding
     });
 
-    // Draw the nodes with drag behavior properly applied to each node individually
+    // Create node groups container
     const nodeGroups = g.append("g")
+      .attr("class", "nodes")
       .selectAll("g")
       .data(nodes)
       .enter()
-      .append("g");
+      .append("g")
+      .attr("class", "node-group");
+
+    // COMPLETELY REDESIGNED DRAG BEHAVIOR
+    // Define separate drag behavior for nodes that won't interfere with zoom
+    const dragHandler = d3.drag<SVGGElement, any>()
+      .on("start", function(event, d) {
+        // Stop event propagation to prevent zoom behavior
+        event.sourceEvent.stopPropagation();
+        
+        if (!event.active) {
+          // Restart simulation with low alpha for smoother movement
+          simulation.alphaTarget(0.2).restart();
+        }
+        
+        // Fix node position at current coordinates
+        d.fx = d.x;
+        d.fy = d.y;
+        
+        // Add "dragging" class to this node
+        d3.select(this).classed("dragging", true);
+      })
+      .on("drag", function(event, d) {
+        // Stop event propagation to prevent zoom behavior
+        event.sourceEvent.stopPropagation();
+        
+        // Update the fixed position to match cursor
+        d.fx = event.x;
+        d.fy = event.y;
+        
+        // Force immediate position update for responsive dragging
+        updatePositions();
+      })
+      .on("end", function(event, d) {
+        // Stop event propagation to prevent zoom behavior
+        event.sourceEvent.stopPropagation();
+        
+        if (!event.active) {
+          // Cool down simulation gently
+          simulation.alphaTarget(0);
+        }
+        
+        // Keep the node fixed at final position (DO NOT reset fx/fy)
+        // This is crucial for maintaining node positions after drag
+        
+        // Remove "dragging" class
+        d3.select(this).classed("dragging", false);
+      });
       
-    // Define the drag behavior specifically for nodes
-    const nodeDrag = d3.drag<SVGGElement, any>()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended);
-      
-    // Apply the drag behavior to each node group
-    nodeGroups.call(nodeDrag);
+    // Apply drag behavior to node groups
+    nodeGroups.call(dragHandler);
 
     // Add node circles with explicit typing for the fill attribute - updated to use custom colors
     nodeGroups.append("circle")
@@ -221,92 +271,150 @@ export const useD3Graph = ({
     // Add tooltips
     nodeGroups.append("title")
       .text(d => `${d.label} (${d.type || 'Entity'})`);
+    
+    // Helper functions for edge path calculation
+    function calculateEdgePath(d: any): string {
+      if (!d.source || !d.target || !d.source.x || !d.target.x) {
+        return "M0,0L0,0";
+      }
+      
+      const sourceX = d.source.x;
+      const sourceY = d.source.y;
+      const targetX = d.target.x;
+      const targetY = d.target.y;
+      
+      // Calculate angle for proper edge connection to node circumference
+      const dx = targetX - sourceX;
+      const dy = targetY - sourceY;
+      const angle = Math.atan2(dy, dx);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Calculate points on the circumference of source and target nodes
+      const sourceNodeEdgeX = sourceX + Math.cos(angle) * nodeRadius;
+      const sourceNodeEdgeY = sourceY + Math.sin(angle) * nodeRadius;
+      
+      // For the target, we calculate backwards to ensure the arrow connects properly
+      const targetNodeEdgeX = targetX - Math.cos(angle) * (nodeRadius + 2); // Add small offset for better arrow connection
+      const targetNodeEdgeY = targetY - Math.sin(angle) * (nodeRadius + 2);
+      
+      // Self-referential loop detection
+      const isSelfLoop = d.source.id === d.target.id;
+      
+      if (isSelfLoop) {
+        // Special case for self-loops
+        const loopSize = nodeRadius * 1.5;
+        const controlPointX = sourceX + loopSize;
+        const controlPointY = sourceY - loopSize;
+        
+        return `M${sourceNodeEdgeX},${sourceNodeEdgeY} Q${controlPointX},${controlPointY} ${sourceX + nodeRadius * 0.7},${sourceY - nodeRadius * 0.7}`;
+      }
+      
+      // Check if there are bidirectional edges
+      const isBidirectional = edges.some((otherEdge: any) => 
+        (otherEdge.source.id === d.target.id && otherEdge.target.id === d.source.id) ||
+        (otherEdge !== d && otherEdge.source.id === d.source.id && otherEdge.target.id === d.target.id)
+      );
+      
+      if (isBidirectional || distance < nodeRadius * 4) {
+        // Use more pronounced curves for shorter distances or bidirectional relationships
+        const curvature = distance < nodeRadius * 3 ? 0.4 : 0.2;
+        const midX = (sourceNodeEdgeX + targetNodeEdgeX) / 2;
+        const midY = (sourceNodeEdgeY + targetNodeEdgeY) / 2;
+        const offX = midX + curvature * (targetNodeEdgeY - sourceNodeEdgeY);
+        const offY = midY - curvature * (targetNodeEdgeX - sourceNodeEdgeX);
+        
+        return `M${sourceNodeEdgeX},${sourceNodeEdgeY} Q${offX},${offY} ${targetNodeEdgeX},${targetNodeEdgeY}`;
+      } else {
+        // Use straight lines for longer distances with no bidirectional relationship
+        return `M${sourceNodeEdgeX},${sourceNodeEdgeY} L${targetNodeEdgeX},${targetNodeEdgeY}`;
+      }
+    }
+    
+    // Helper function for link label positioning
+    function calculateLinkLabelPosition(d: any): string {
+      if (!d.source || !d.target || d.source.x === undefined || d.target.x === undefined) {
+        return "translate(0,0)";
+      }
+      
+      const sourceX = d.source.x;
+      const sourceY = d.source.y;
+      const targetX = d.target.x;
+      const targetY = d.target.y;
+      
+      // Self-referential loop detection
+      const isSelfLoop = d.source.id === d.target.id;
+      
+      if (isSelfLoop) {
+        // Position the label above the loop
+        const loopSize = nodeRadius * 1.5;
+        return `translate(${sourceX + loopSize * 0.5},${sourceY - loopSize * 0.8})`;
+      }
+      
+      // Calculate the direction angle
+      const dx = targetX - sourceX;
+      const dy = targetY - sourceY;
+      const angle = Math.atan2(dy, dx);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Position the label at the midpoint of the visible line
+      const sourceEdgeX = sourceX + Math.cos(angle) * nodeRadius;
+      const sourceEdgeY = sourceY + Math.sin(angle) * nodeRadius;
+      const targetEdgeX = targetX - Math.cos(angle) * nodeRadius;
+      const targetEdgeY = targetY - Math.sin(angle) * nodeRadius;
+      
+      // Check if there are bidirectional edges
+      const isBidirectional = edges.some((otherEdge: any) => 
+        (otherEdge.source.id === d.target.id && otherEdge.target.id === d.source.id) ||
+        (otherEdge !== d && otherEdge.source.id === d.source.id && otherEdge.target.id === d.target.id)
+      );
+      
+      let labelX;
+      let labelY;
+      
+      if (isBidirectional || distance < nodeRadius * 4) {
+        // For bidirectional or close nodes, position label with offset from the midpoint
+        const curvature = distance < nodeRadius * 3 ? 0.4 : 0.2;
+        const midX = (sourceEdgeX + targetEdgeX) / 2;
+        const midY = (sourceEdgeY + targetEdgeY) / 2;
+        
+        // For curved edges, place label at the apex of curve
+        const perpAngle = angle + Math.PI / 2;
+        const curveOffset = distance * curvature;
+        labelX = midX + Math.cos(perpAngle) * curveOffset;
+        labelY = midY + Math.sin(perpAngle) * curveOffset;
+      } else {
+        // For straight lines, position at midpoint with small offset
+        const midX = (sourceEdgeX + targetEdgeX) / 2;
+        const midY = (sourceEdgeY + targetEdgeY) / 2;
+        
+        // Offset to avoid overlapping with the line
+        const perpAngle = angle + Math.PI / 2;
+        const offset = 15; // Smaller offset for straight lines
+        labelX = midX + Math.cos(perpAngle) * offset;
+        labelY = midY + Math.sin(perpAngle) * offset;
+      }
+      
+      return `translate(${labelX},${labelY})`;
+    }
 
     // Function to update positions of all elements - Improved edge path calculation
     function updatePositions() {
-      // Update link paths with improved arrow positioning
-      link.attr("d", (d: any) => {
-        if (!d.source || !d.target || !d.source.x || !d.target.x) {
-          return "M0,0L0,0";
-        }
-        
-        const sourceX = d.source.x;
-        const sourceY = d.source.y;
-        const targetX = d.target.x;
-        const targetY = d.target.y;
-        
-        // Calculate angle for proper edge connection to node circumference
-        const dx = targetX - sourceX;
-        const dy = targetY - sourceY;
-        const angle = Math.atan2(dy, dx);
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        // Calculate points on the circumference of source and target nodes
-        const sourceNodeEdgeX = sourceX + Math.cos(angle) * nodeRadius;
-        const sourceNodeEdgeY = sourceY + Math.sin(angle) * nodeRadius;
-        
-        // For the target, we calculate backwards to ensure the arrow connects properly
-        const targetNodeEdgeX = targetX - Math.cos(angle) * (nodeRadius + 2); // Add small offset for better arrow connection
-        const targetNodeEdgeY = targetY - Math.sin(angle) * (nodeRadius + 2);
-        
-        // Choose between curved or straight lines based on relationship and distance
-        const isBidirectional = edges.some((otherEdge: any) => 
-          (otherEdge.source.id === d.target.id && otherEdge.target.id === d.source.id) ||
-          (otherEdge !== d && otherEdge.source.id === d.source.id && otherEdge.target.id === d.target.id)
-        );
-        
-        // Self-referential loop detection
-        const isSelfLoop = d.source.id === d.target.id;
-        
-        if (isSelfLoop) {
-          // Special case for self-loops
-          const loopSize = nodeRadius * 1.5;
-          const controlPointX = sourceX + loopSize;
-          const controlPointY = sourceY - loopSize;
-          
-          // Use the curved arrow marker
-          d3.select(this).attr("marker-end", "url(#arrowhead-curved)");
-          
-          return `M${sourceNodeEdgeX},${sourceNodeEdgeY} Q${controlPointX},${controlPointY} ${sourceX + nodeRadius * 0.7},${sourceY - nodeRadius * 0.7}`;
-        } else if (isBidirectional || distance < nodeRadius * 4) {
-          // Use more pronounced curves for shorter distances or bidirectional relationships
-          const curvature = distance < nodeRadius * 3 ? 0.4 : 0.2;
-          const midX = (sourceNodeEdgeX + targetNodeEdgeX) / 2;
-          const midY = (sourceNodeEdgeY + targetNodeEdgeY) / 2;
-          const offX = midX + curvature * (targetNodeEdgeY - sourceNodeEdgeY);
-          const offY = midY - curvature * (targetNodeEdgeX - sourceNodeEdgeX);
-          
-          // Use the curved arrow marker
-          d3.select(this).attr("marker-end", "url(#arrowhead-curved)");
-          
-          return `M${sourceNodeEdgeX},${sourceNodeEdgeY} Q${offX},${offY} ${targetNodeEdgeX},${targetNodeEdgeY}`;
-        } else {
-          // Use straight lines for longer distances with no bidirectional relationship
-          // Use the straight arrow marker
-          d3.select(this).attr("marker-end", "url(#arrowhead-straight)");
-          
-          return `M${sourceNodeEdgeX},${sourceNodeEdgeY} L${targetNodeEdgeX},${targetNodeEdgeY}`;
-        }
-      });
-      
-      // Set appropriate marker-end for all paths (this fixes the arrow issue)
+      // Update link paths with improved path calculation
       link.each(function(d: any) {
+        // First determine which arrow marker to use
         const path = d3.select(this);
         const source = d.source;
         const target = d.target;
         
         if (source && target) {
-          const dx = target.x - source.x;
-          const dy = target.y - source.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          // Check if there are bidirectional edges or self-loops
+          const isSelfLoop = source.id === target.id;
           const isBidirectional = edges.some((otherEdge: any) => 
             (otherEdge.source.id === target.id && otherEdge.target.id === source.id) ||
             (otherEdge !== d && otherEdge.source.id === source.id && otherEdge.target.id === target.id)
           );
-          
-          const isSelfLoop = source.id === target.id;
+          const dx = target.x - source.x;
+          const dy = target.y - source.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
           
           if (isSelfLoop || isBidirectional || distance < nodeRadius * 4) {
             path.attr("marker-end", "url(#arrowhead-curved)");
@@ -314,74 +422,13 @@ export const useD3Graph = ({
             path.attr("marker-end", "url(#arrowhead-straight)");
           }
         }
+        
+        // Then set the path
+        path.attr("d", calculateEdgePath);
       });
       
-      // Update link label positions with improved placement
-      linkLabels.attr("transform", (d: any) => {
-        if (!d.source || !d.target || d.source.x === undefined || d.target.x === undefined) {
-          return "translate(0,0)";
-        }
-        
-        const sourceX = d.source.x;
-        const sourceY = d.source.y;
-        const targetX = d.target.x;
-        const targetY = d.target.y;
-        
-        // Self-referential loop detection
-        const isSelfLoop = d.source.id === d.target.id;
-        
-        if (isSelfLoop) {
-          // Position the label above the loop
-          const loopSize = nodeRadius * 1.5;
-          return `translate(${sourceX + loopSize * 0.5},${sourceY - loopSize * 0.8})`;
-        }
-        
-        // Calculate the direction angle
-        const dx = targetX - sourceX;
-        const dy = targetY - sourceY;
-        const angle = Math.atan2(dy, dx);
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        // Position the label at the midpoint of the visible line
-        const sourceEdgeX = sourceX + Math.cos(angle) * nodeRadius;
-        const sourceEdgeY = sourceY + Math.sin(angle) * nodeRadius;
-        const targetEdgeX = targetX - Math.cos(angle) * nodeRadius;
-        const targetEdgeY = targetY - Math.sin(angle) * nodeRadius;
-        
-        // Check if there are bidirectional edges
-        const isBidirectional = edges.some((otherEdge: any) => 
-          (otherEdge.source.id === d.target.id && otherEdge.target.id === d.source.id) ||
-          (otherEdge !== d && otherEdge.source.id === d.source.id && otherEdge.target.id === d.target.id)
-        );
-        
-        let labelX;
-        let labelY;
-        
-        if (isBidirectional || distance < nodeRadius * 4) {
-          // For bidirectional or close nodes, position label with offset from the midpoint
-          const curvature = distance < nodeRadius * 3 ? 0.4 : 0.2;
-          const midX = (sourceEdgeX + targetEdgeX) / 2;
-          const midY = (sourceEdgeY + targetEdgeY) / 2;
-          
-          // For curved edges, place label at the apex of curve
-          const perpAngle = angle + Math.PI / 2;
-          const curveOffset = distance * curvature;
-          labelX = midX + Math.cos(perpAngle) * curveOffset;
-          labelY = midY + Math.sin(perpAngle) * curveOffset;
-        } else {
-          // For straight lines, position at midpoint with small offset
-          const midX = (sourceEdgeX + targetEdgeX) / 2;
-          const midY = (sourceEdgeY + targetEdgeY) / 2;
-          
-          // Offset to avoid overlapping with the line
-          const perpAngle = angle + Math.PI / 2;
-          const offset = 15; // Smaller offset for straight lines
-          labelX = midX + Math.cos(perpAngle) * offset;
-          labelY = midY + Math.sin(perpAngle) * offset;
-        }
-        
-        return `translate(${labelX},${labelY})`;
-      });
+      // Update link label positions
+      linkLabels.attr("transform", calculateLinkLabelPosition);
       
       // Update node positions
       nodeGroups.attr("transform", (d: any) => {
@@ -389,59 +436,6 @@ export const useD3Graph = ({
         const y = d.y || 0;
         return `translate(${x},${y})`;
       });
-    }
-    
-    // Run the simulation for more iterations to position nodes before first render
-    for (let i = 0; i < 120; i++) {
-      simulation.tick();
-    }
-    
-    // Update positions immediately after simulation
-    updatePositions();
-    
-    // Apply initial zoom to ensure everything is visible
-    const initialScale = 0.85; // Slightly zoomed out
-    svg.call(zoom.transform as any, 
-      d3.zoomIdentity
-        .translate(width/2, height/2)
-        .scale(initialScale)
-        .translate(-width/2, -height/2)
-    );
-    
-    // CRITICAL FIX: Improved drag handlers that prevent event propagation and maintain node positions
-    function dragstarted(event: d3.D3DragEvent<SVGGElement, any, any>) {
-      // Prevent the default zoom behavior
-      event.sourceEvent.stopPropagation();
-      
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      
-      // Fix the position of only the dragged node
-      const d = event.subject;
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-    
-    function dragged(event: d3.D3DragEvent<SVGGElement, any, any>) {
-      // Prevent the default zoom behavior
-      event.sourceEvent.stopPropagation();
-      
-      // Update only the dragged node's position
-      const d = event.subject;
-      d.fx = event.x;
-      d.fy = event.y;
-      
-      // Update positions immediately for smooth dragging
-      updatePositions();
-    }
-    
-    function dragended(event: d3.D3DragEvent<SVGGElement, any, any>) {
-      // Prevent the default zoom behavior
-      event.sourceEvent.stopPropagation();
-      
-      if (!event.active) simulation.alphaTarget(0);
-      
-      // Keep the node fixed where it was dropped
-      // DO NOT reset fx/fy to null - this would make the node float back
     }
     
     // Helper functions for formatting labels
@@ -462,6 +456,23 @@ export const useD3Graph = ({
         .replace(/_/g, ' ')
         .toLowerCase();
     }
+
+    // Run the simulation for more iterations to position nodes before first render
+    for (let i = 0; i < 120; i++) {
+      simulation.tick();
+    }
+    
+    // Update positions immediately after simulation
+    updatePositions();
+    
+    // Apply initial zoom to ensure everything is visible
+    const initialScale = 0.85; // Slightly zoomed out
+    svg.call(zoom.transform as any, 
+      d3.zoomIdentity
+        .translate(width/2, height/2)
+        .scale(initialScale)
+        .translate(-width/2, -height/2)
+    );
 
     // Let the simulation run for a bit to better position elements
     simulation
@@ -495,8 +506,12 @@ export const useD3Graph = ({
       return () => clearTimeout(timer);
     }
     
-    // Add resize listener
-    const handleResize = () => renderGraph();
+    // Add resize listener for responsive updates
+    const handleResize = () => {
+      console.log("Window resized, re-rendering graph");
+      renderGraph();
+    };
+    
     window.addEventListener('resize', handleResize);
     
     return () => {
