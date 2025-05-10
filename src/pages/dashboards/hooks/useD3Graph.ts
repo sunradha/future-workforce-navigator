@@ -52,15 +52,18 @@ export const useD3Graph = ({
 
     svg.call(zoom as any);
 
-    // Define arrow marker for directed edges
+    // Calculate node radius - we'll use this for arrow positioning
+    const nodeRadius = 45;
+
+    // Define arrow marker for directed edges - FIX: Adjust marker position and size
     svg.append("defs").append("marker")
       .attr("id", "arrowhead")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 60) // Position it further away to ensure it's at the edge of circle
+      .attr("refX", nodeRadius + 5) // Position closer to target node edge
       .attr("refY", 0)
       .attr("orient", "auto")
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
+      .attr("markerWidth", 8) // Slightly larger
+      .attr("markerHeight", 8) // Slightly larger
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
       .attr("fill", darkMode ? "#FFFFFF" : "#666"); // White arrows in dark mode
@@ -92,7 +95,7 @@ export const useD3Graph = ({
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collide", d3.forceCollide().radius(80)); // Increased collision radius
 
-    // Draw the links
+    // Draw the links - FIX: Improved edge connections with proper path calculation
     const link = g.append("g")
       .selectAll("path")
       .data(edges)
@@ -152,7 +155,7 @@ export const useD3Graph = ({
 
     // Add node circles with explicit typing for the fill attribute - updated to use custom colors
     nodeGroups.append("circle")
-      .attr("r", 45) // Increased node size
+      .attr("r", nodeRadius) // Using our defined nodeRadius
       .attr("fill", function(d: Node) {
         return getNodeColor(d);
       })
@@ -199,21 +202,48 @@ export const useD3Graph = ({
     nodeGroups.append("title")
       .text(d => `${d.label} (${d.type || 'Entity'})`);
 
-    // Function to update positions of all elements
+    // Function to update positions of all elements - FIX: Improved edge path calculation
     function updatePositions() {
-      // Update link paths with smoother curves
+      // Update link paths with improved arrow positioning
       link.attr("d", (d: any) => {
-        const sourceX = d.source.x || 0;
-        const sourceY = d.source.y || 0;
-        const targetX = d.target.x || 0;
-        const targetY = d.target.y || 0;
+        if (!d.source || !d.target || !d.source.x || !d.target.x) {
+          return "M0,0L0,0";
+        }
         
-        // Calculate distance for proper arrow placement
+        const sourceX = d.source.x;
+        const sourceY = d.source.y;
+        const targetX = d.target.x;
+        const targetY = d.target.y;
+        
+        // Calculate angle for proper edge connection to node circumference
         const dx = targetX - sourceX;
         const dy = targetY - sourceY;
-        const dr = Math.sqrt(dx * dx + dy * dy) * 1.5; // Smoother curve
+        const angle = Math.atan2(dy, dx);
         
-        return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
+        // Calculate points on the circumference of source and target nodes
+        const sourceNodeEdgeX = sourceX + Math.cos(angle) * nodeRadius;
+        const sourceNodeEdgeY = sourceY + Math.sin(angle) * nodeRadius;
+        
+        // For the target, we calculate backwards to ensure the arrow connects properly
+        const targetNodeEdgeX = targetX - Math.cos(angle) * nodeRadius;
+        const targetNodeEdgeY = targetY - Math.sin(angle) * nodeRadius;
+        
+        // Choose between curved or straight lines based on distance
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > nodeRadius * 4) {
+          // Use a subtle curve for longer distances
+          const curvature = 0.2;
+          const midX = (sourceNodeEdgeX + targetNodeEdgeX) / 2;
+          const midY = (sourceNodeEdgeY + targetNodeEdgeY) / 2;
+          const offX = midX + curvature * (targetNodeEdgeY - sourceNodeEdgeY);
+          const offY = midY - curvature * (targetNodeEdgeX - sourceNodeEdgeX);
+          
+          return `M${sourceNodeEdgeX},${sourceNodeEdgeY} Q${offX},${offY} ${targetNodeEdgeX},${targetNodeEdgeY}`;
+        } else {
+          // Use straight lines for shorter distances
+          return `M${sourceNodeEdgeX},${sourceNodeEdgeY} L${targetNodeEdgeX},${targetNodeEdgeY}`;
+        }
       });
       
       // Update link label positions
@@ -222,18 +252,32 @@ export const useD3Graph = ({
           return "translate(0,0)";
         }
         
-        const x = (d.source.x + d.target.x) / 2;
-        const y = (d.source.y + d.target.y) / 2;
+        const sourceX = d.source.x;
+        const sourceY = d.source.y;
+        const targetX = d.target.x;
+        const targetY = d.target.y;
         
-        // Calculate angle to offset the label
-        const dx = d.target.x - d.source.x;
-        const dy = d.target.y - d.source.y;
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        // Calculate the direction angle
+        const dx = targetX - sourceX;
+        const dy = targetY - sourceY;
+        const angle = Math.atan2(dy, dx);
         
-        // Add vertical offset to avoid overlap with the link
-        const offset = angle > 90 || angle < -90 ? 15 : -15;
+        // Position the label at the midpoint of the visible line
+        const sourceEdgeX = sourceX + Math.cos(angle) * nodeRadius;
+        const sourceEdgeY = sourceY + Math.sin(angle) * nodeRadius;
+        const targetEdgeX = targetX - Math.cos(angle) * nodeRadius;
+        const targetEdgeY = targetY - Math.sin(angle) * nodeRadius;
         
-        return `translate(${x},${y + offset})`;
+        const labelX = (sourceEdgeX + targetEdgeX) / 2;
+        const labelY = (sourceEdgeY + targetEdgeY) / 2;
+        
+        // Offset to avoid overlapping with the line
+        const perpAngle = angle + Math.PI / 2;
+        const offset = 20;
+        const labelOffsetX = labelX + Math.cos(perpAngle) * offset;
+        const labelOffsetY = labelY + Math.sin(perpAngle) * offset;
+        
+        return `translate(${labelOffsetX},${labelOffsetY})`;
       });
       
       // Update node positions
