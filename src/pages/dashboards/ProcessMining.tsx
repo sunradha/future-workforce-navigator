@@ -32,11 +32,6 @@ const questionsByCategory = {
     "What are the local authorities in England that are at higher risk of job automation than other places in England?",
     "Which training programs were deemed more successful or effective than others and why?",
     "Which skills need prioritization to improve the skill levels of employees to perform their jobs across different sectors?",
-    "Evaluate the performance of all training programs conducted in the last one year.",
-    "Which training programs were having high level of difficulty or perceived difficulty by employees?",
-    "Which skill categories lead to the most high-difficulty programs?",
-    "Which employees struggled across multiple programs?",
-    "Which training programs should be prioritised to address risk of automation to jobs across industries?",
     "Which training program was most popular with employees across industries?",
     "Which training program has received best feedback from employees?"
   ]
